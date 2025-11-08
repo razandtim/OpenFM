@@ -18,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "OpenFM · Mood-perfect royalty-free radio",
+  title: "OpenFM",
   description:
     "AI-generated, royalty-safe mood radio for creators. Switch moods, surface metadata, and keep your stream in vibe lock.",
   openGraph: {
