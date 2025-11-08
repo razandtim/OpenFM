@@ -14,6 +14,7 @@ export interface MoodConfig {
 
 export interface Track {
   id: string;
+  slug: string;
   mood: MoodId;
   title: string;
   artist: string;
