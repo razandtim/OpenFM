@@ -94,16 +94,16 @@ const defineSeeds = (
   }));
 
 const epicEntries: Array<[string, string]> = [
-  ["bannerfall.wav", "Bannerfall"],
-  ["chronicle-surge.wav", "Chronicle Surge"],
-  ["crownfire.wav", "Crownfire"],
-  ["empire-bloom.wav", "Empire Bloom"],
-  ["myth-os.wav", "Myth OS"],
-  ["nova-barrage.wav", "Nova Barrage"],
-  ["obsidian-triumph.wav", "Obsidian Triumph"],
-  ["solar-forge.wav", "Solar Forge"],
-  ["titanium-choir.wav", "Titanium Choir"],
-  ["volt-sky.wav", "Volt Sky"],
+  ["Aurora_Crown_2025-11-08T164809.mp3", "Aurora Crown"],
+  ["Bannerfall_2025-11-08T164558.mp3", "Bannerfall"],
+  ["Crownfire_Ascendant_2025-11-08T160304.mp3", "Crownfire Ascendant"],
+  ["Embers_of_the_Empire_2025-11-08T164239.mp3", "Embers of the Empire"],
+  ["Legion_of_Dawn_2025-11-08T163347.mp3", "Legion of Dawn"],
+  ["OpenHack Anthem.mp3", "OpenHack Anthem"],
+  ["Skyforge_Anthem_2025-11-08T162248.mp3", "Skyforge Anthem"],
+  ["Starlight_Ascendant_2025-11-08T163841.mp3", "Starlight Ascendant"],
+  ["Stormborne_Raiders_2025-11-08T164036.mp3", "Stormborne Raiders"],
+  ["Titans_Gate_2025-11-08T163700.mp3", "Titans Gate"],
 ];
 
 const romanticEntries: Array<[string, string]> = [
@@ -154,16 +154,16 @@ const scaryEntries: Array<[string, string]> = [
 ];
 
 const sadEntries: Array<[string, string]> = [
-  ["afterglow-ledger.wav", "Afterglow Ledger"],
-  ["blue-hour-drift.wav", "Blue Hour Drift"],
-  ["dusk-module.wav", "Dusk Module"],
-  ["hold-music-ghosts.wav", "Hold Music Ghosts"],
-  ["late-fee-lullaby.wav", "Late Fee Lullaby"],
-  ["november-kernel.wav", "November Kernel"],
-  ["puddle-memory.wav", "Puddle Memory"],
-  ["quiet-orbit.wav", "Quiet Orbit"],
-  ["sleepless-pixel.wav", "Sleepless Pixel"],
-  ["void-letters.wav", "Void Letters"],
+  ["Ashes_Of_August_2025-11-08T165742.mp3", "Ashes of August"],
+  ["Blue_Apartment_2025-11-08T165612.mp3", "Blue Apartment"],
+  ["Empty_Chair_2025-11-08T165124.mp3", "Empty Chair"],
+  ["Half-Light_Confession_2025-11-08T170106.mp3", "Half-Light Confession"],
+  ["Last Cup by the Sink.mp3", "Last Cup by the Sink"],
+  ["Letters_I_Never_Sent_2025-11-08T165306.mp3", "Letters I Never Sent"],
+  ["Midnight At The Terminal.mp3", "Midnight at the Terminal"],
+  ["Porcelain_Morning_2025-11-08T165923.mp3", "Porcelain Morning"],
+  ["Rain_On_The_Voicemail_2025-11-08T165442.mp3", "Rain on the Voicemail"],
+  ["Silence_After_Goodbye_2025-11-08T170440.mp3", "Silence After Goodbye"],
 ];
 
 const trackSeeds: Record<MoodId, TrackSeed[]> = {
