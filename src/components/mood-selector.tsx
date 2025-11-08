@@ -12,21 +12,26 @@ export const MoodSelector = () => {
 
   return (
     <section className="rounded-3xl border border-white/10 bg-white/5 p-4 text-white shadow-inner shadow-black/30 backdrop-blur-xl">
-      <div className="flex items-center justify-between px-2 pb-3 text-sm uppercase tracking-[0.3em] text-white/50">
+      <div className="flex items-center justify-between px-2 pb-3 text-xs uppercase tracking-[0.35em] text-white/50">
         <span>Choose a mood</span>
         <span className="text-white/60">
           {isLoading ? "Tuning..." : isPlaying ? "Live" : "Paused"}
         </span>
       </div>
-      <div className="grid gap-3 md:grid-cols-3">
-        {MOOD_ORDER.map((mood) => (
-          <MoodButton
-            key={mood}
-            mood={mood}
-            isActive={currentMood === mood}
-            onSelect={() => setMood(mood)}
-          />
-        ))}
+      <div
+        className="horizontal-scroll overflow-x-auto pb-2"
+        style={{ scrollbarWidth: "none" }}
+      >
+        <div className="flex min-w-max gap-3 pr-2">
+          {MOOD_ORDER.map((mood) => (
+            <MoodButton
+              key={mood}
+              mood={mood}
+              isActive={currentMood === mood}
+              onSelect={() => setMood(mood)}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -47,7 +52,7 @@ const MoodButton = ({
       type="button"
       onClick={onSelect}
       className={clsx(
-        "relative overflow-hidden rounded-2xl border border-white/10 p-4 text-left transition hover:border-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60",
+        "relative flex w-60 flex-shrink-0 flex-col overflow-hidden rounded-2xl border border-white/10 p-4 text-left transition hover:border-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60",
         isActive ? "bg-white/10 shadow-lg shadow-black/30" : "bg-slate-900/40",
       )}
       aria-pressed={isActive}

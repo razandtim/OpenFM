@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/config-2.0.json",
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "outputDirectory": ".next",
+  "env": {
+    "NEXT_PUBLIC_STREAM_KIT_URL": "/stream-kit.zip",
+    "NEXT_PUBLIC_DEFAULT_MOOD": "epic"
+  },
+  "analyticsId": "VERCEL_ANALYTICS_ID"
+}
