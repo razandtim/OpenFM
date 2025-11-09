@@ -191,7 +191,57 @@ function Invoke-CMake {
             New-Item -ItemType Directory -Force -Path $pluginDest | Out-Null
             New-Item -ItemType Directory -Force -Path $dataDest | Out-Null
 
+            # Copy plugin DLL
             Copy-Item "Release\openfm.dll" -Destination $pluginDest -Force
+            Write-Host "[ok] Copied openfm.dll" -ForegroundColor Green
+
+            # Copy required Qt DLLs
+            $qtDlls = @(
+                "Qt6Core.dll",
+                "Qt6Widgets.dll",
+                "Qt6WebEngineWidgets.dll",
+                "Qt6WebEngineCore.dll",
+                "Qt6WebEngine.dll",
+                "Qt6WebChannel.dll",
+                "Qt6Network.dll",
+                "Qt6Positioning.dll",
+                "Qt6Qml.dll",
+                "Qt6Quick.dll",
+                "Qt6Gui.dll"
+            )
+            
+            $qtBinPath = Join-Path $QtPath "bin"
+            $copiedCount = 0
+            foreach ($dll in $qtDlls) {
+                $srcPath = Join-Path $qtBinPath $dll
+                if (Test-Path $srcPath) {
+                    Copy-Item $srcPath -Destination $pluginDest -Force
+                    $copiedCount++
+                }
+            }
+            Write-Host "[ok] Copied $copiedCount Qt DLLs" -ForegroundColor Green
+            
+            # Copy all Qt WebEngine Chromium DLLs if they exist
+            $qtWebEngineBin = Join-Path $QtPath "bin\QtWebEngineProcess.exe"
+            if (Test-Path $qtWebEngineBin) {
+                $webEngineDir = Split-Path $qtWebEngineBin
+                $chromiumDlls = Get-ChildItem $webEngineDir -Filter "*.dll" -ErrorAction SilentlyContinue
+                foreach ($dll in $chromiumDlls) {
+                    Copy-Item $dll.FullName -Destination $pluginDest -Force -ErrorAction SilentlyContinue
+                }
+                Write-Host "[ok] Copied Qt WebEngine Chromium DLLs" -ForegroundColor Green
+            }
+
+            # Copy Qt WebEngine resources if they exist
+            $qtWebEngineResources = Join-Path $QtPath "resources"
+            if (Test-Path $qtWebEngineResources) {
+                $webEngineDest = Join-Path $pluginDest "resources"
+                if (-not (Test-Path $webEngineDest)) {
+                    Copy-Item -Recurse $qtWebEngineResources -Destination $webEngineDest -Force
+                    Write-Host "[ok] Copied Qt WebEngine resources" -ForegroundColor Green
+                }
+            }
+
             if (Test-Path "..\data") {
                 Copy-Item -Recurse "..\data\*" -Destination $dataDest -Force
             }
