@@ -1,41 +1,56 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Testing
+coverage/
+*.log
 
-# testing
-/coverage
+# Production builds
+dist/
+build/
+out/
+.next/
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
+# Development
 .DS_Store
-*.pem
+*.local
+.env
+.env.local
+.env.*.local
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# env files (can opt-in for committing if needed)
-.env*
+# Turbo
+.turbo/
 
-# vercel
-.vercel
+# Parcel
+.parcel-cache/
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Tauri
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/Cargo.lock
+
+# OBS Plugin
+apps/obs-plugin/build/
+apps/obs-plugin/cmake-build-*/
+
+# OS
+Thumbs.db
+
+# Temp files
+tmp-*.log
+tmp-*.err
+
+# Mood packs
+.moodpacks/
+*.zip
+
+# Auto-push
+.autopush/

@@ -1,0 +1,14 @@
+node_modules/**
+dist/**
+build/**
+out/**
+coverage/**
+*.log
+*.tmp
+.moodpacks/**
+.cache/**
+.turbo/**
+.next/**
+apps/desktop/src-tauri/target/**
+apps/obs-plugin/build/**
+
