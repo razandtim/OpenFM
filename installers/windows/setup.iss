@@ -4,7 +4,7 @@
 #define AppVersion "0.1.0"
 #define AppPublisher "OpenFM Team"
 #define AppURL "https://github.com/openfm/openfm"
-#define AppExeName "OpenFM.exe"
+#define AppExeName "openfm-desktop.exe"
 
 [Setup]
 AppId={{8B3D4F2A-9C7E-4B1D-8F6A-3E9C2A1B5D4F}
@@ -27,7 +27,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "installmoodpacks"; Description: "Install Starter Mood Packs (Epic, Romantic, Funny, Scary, Sad)"; GroupDescription: "Content:"; Flags: checked
+Name: "installmoodpacks"; Description: "Install Starter Mood Packs (Epic, Romantic, Funny, Scary, Sad)"; GroupDescription: "Content:"; Flags: checkedonce
 
 [Files]
 ; Service

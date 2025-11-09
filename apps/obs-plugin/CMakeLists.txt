@@ -23,13 +23,14 @@ endif()
 # OBS include directories
 set(OBS_INCLUDE_DIRS
     "${OBS_SOURCE_DIR}/libobs"
-    "${OBS_SOURCE_DIR}/UI/obs-frontend-api"
+    "${OBS_SOURCE_DIR}/frontend/api"
+    "${OBS_SOURCE_DIR}/build/config"
 )
 
 # Platform-specific settings
 if(WIN32)
     set(OBS_LIB_DIR "${OBS_SOURCE_DIR}/build/libobs/Release" CACHE PATH "OBS library directory")
-    set(OBS_FRONTEND_LIB_DIR "${OBS_SOURCE_DIR}/build/UI/obs-frontend-api/Release" CACHE PATH "OBS frontend library directory")
+    set(OBS_FRONTEND_LIB_DIR "${OBS_SOURCE_DIR}/build/frontend/api/Release" CACHE PATH "OBS frontend library directory")
     
     set(OBS_LIBRARIES
         "${OBS_LIB_DIR}/obs.lib"
@@ -97,7 +98,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 # Platform-specific properties
 if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
-        OUTPUT_NAME "openfm-obs"
+        OUTPUT_NAME "openfm"
         SUFFIX ".dll"
         PREFIX ""
     )

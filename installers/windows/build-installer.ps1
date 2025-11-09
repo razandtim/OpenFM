@@ -75,7 +75,7 @@ try {
     Write-Host "`n[4/4] Creating installer..." -ForegroundColor Cyan
 
     $serviceDist = "apps\service\dist"
-    $desktopExe = "apps\desktop\src-tauri\target\release\OpenFM.exe"
+    $desktopExe = "apps\desktop\src-tauri\target\release\openfm-desktop.exe"
     $obsPlugin = "apps\obs-plugin\build\Release\openfm.dll"
 
     $missingFiles = @()

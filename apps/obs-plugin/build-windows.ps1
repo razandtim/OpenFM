@@ -75,6 +75,33 @@ function Invoke-CMake {
 
     Write-Host "[ok] Using OBS Studio at: $ObsPath" -ForegroundColor Green
 
+    if (-not $ObsSourcePath -and $env:OBS_SOURCE_DIR -and (Test-Path $env:OBS_SOURCE_DIR)) {
+        $ObsSourcePath = $env:OBS_SOURCE_DIR
+    }
+
+    if (-not $ObsSourcePath) {
+        $candidateObsSources = @(
+            "D:\deps\obs-studio",
+            "C:\deps\obs-studio",
+            (Join-Path $env:USERPROFILE "source\obs-studio"),
+            (Join-Path $env:USERPROFILE "obs-studio")
+        )
+
+        foreach ($path in $candidateObsSources) {
+            if ($path -and (Test-Path $path)) {
+                $ObsSourcePath = $path
+                break
+            }
+        }
+    }
+
+    if (-not $ObsSourcePath) {
+        Write-Host "[err] OBS source tree not found. Clone https://github.com/obsproject/obs-studio.git and pass -ObsSourcePath or set OBS_SOURCE_DIR." -ForegroundColor Red
+        exit 1
+    }
+
+    Write-Host "[ok] Using OBS source at: $ObsSourcePath" -ForegroundColor Green
+
     # Discover Qt installation
     if (-not $QtPath) {
         $envCandidates = @()
@@ -145,6 +172,7 @@ function Invoke-CMake {
             "-A", "x64",
             "-DCMAKE_BUILD_TYPE=Release",
             "-DOBS_DIR=$ObsPath",
+            "-DOBS_SOURCE_DIR=$ObsSourcePath",
             "-DCMAKE_PREFIX_PATH=$QtPath",
             "-DQt6_DIR=$qtCmakeDir",
             ".."

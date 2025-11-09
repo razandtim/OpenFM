@@ -16,6 +16,7 @@ MODULE_EXPORT const char *obs_module_description(void)
 namespace openfm {
 
 static Plugin *plugin_instance = nullptr;
+static constexpr const char *kDockId = "openfm_dock";
 
 Plugin::Plugin()
 {
@@ -39,7 +40,7 @@ bool Plugin::load()
 void Plugin::unload()
 {
     blog(LOG_INFO, "[OpenFM] Plugin unloading...");
-    // Cleanup
+    obs_frontend_remove_dock(kDockId);
 }
 
 void Plugin::setup_dock()
@@ -48,7 +49,10 @@ void Plugin::setup_dock()
     obs_frontend_push_ui_translation(obs_module_get_string);
     
     auto *dock = new OpenFMDock();
-    obs_frontend_add_dock(dock);
+    if (!obs_frontend_add_custom_qdock(kDockId, dock)) {
+        blog(LOG_WARNING, "[OpenFM] Failed to register dock");
+        delete dock;
+    }
     
     obs_frontend_pop_ui_translation();
 }
