@@ -224,21 +224,24 @@ function APIConnectedWrapper({
   
   // Sync WebSocket state to player context
   React.useEffect(() => {
-    if (player.onStateChange && player.state && state) {
-      // Only update if there are meaningful differences (not just progress)
-      const hasNonProgressChanges = 
-        state.currentMood !== player.state.currentMood ||
-        state.currentTrack?.id !== player.state.currentTrack?.id ||
-        state.isPlaying !== player.state.isPlaying ||
-        state.isLoading !== player.state.isLoading ||
-        state.isMuted !== player.state.isMuted ||
-        Math.abs(state.volume - player.state.volume) > 0.01;
+    if (player.onStateChange && state) {
+      // Always store the latest WebSocket state for progress tracking to use
+      const prevState = lastWebSocketStateRef.current;
+      lastWebSocketStateRef.current = state;
       
-      if (hasNonProgressChanges) {
+      // Only sync if something meaningful changed (not just progress updates)
+      if (!prevState ||
+          state.currentMood !== prevState.currentMood ||
+          state.currentTrack?.id !== prevState.currentTrack?.id ||
+          state.isPlaying !== prevState.isPlaying ||
+          state.isLoading !== prevState.isLoading ||
+          state.isMuted !== prevState.isMuted ||
+          Math.abs(state.volume - prevState.volume) > 0.01) {
+        
         console.log('Syncing WebSocket state to player context');
-        lastWebSocketStateRef.current = state;
         player.onStateChange(state);
       }
+      // If only progress changed, skip the update - let local tracking handle it
     }
   }, [state, player.onStateChange]);
   
@@ -249,11 +252,12 @@ function APIConnectedWrapper({
     
     const audio = audioElements[0];
     let lastUpdateTime = 0;
+    let lastElapsed = 0;
     const updateThrottleMs = 100; // Update UI every 100ms (10 times per second)
     let animationFrameId: number;
     
     const updateProgress = () => {
-      if (audio && player.state.currentTrack) {
+      if (audio && !audio.paused && audio.duration > 0) {
         const now = Date.now();
         
         // Throttle updates to avoid too many state changes
@@ -264,21 +268,20 @@ function APIConnectedWrapper({
           const duration = audio.duration || 0;
           const progress = duration > 0 ? elapsed / duration : 0;
           
-          // Only update if values actually changed
-          if (
-            Math.abs(elapsed - player.state.elapsed) > 0.05 ||
-            Math.abs(duration - player.state.duration) > 0.05
-          ) {
+          // Only update if elapsed actually changed
+          if (Math.abs(elapsed - lastElapsed) > 0.01) {
+            lastElapsed = elapsed;
+            
             // Use the last WebSocket state as base to avoid overwriting backend changes
-            const baseState = lastWebSocketStateRef.current || player.state;
-            // Update local state directly without calling API
-            // Only update progress fields, preserve all other fields from WebSocket state
-            player.onStateChange?.({ 
-              ...baseState, 
-              elapsed, 
-              duration, 
-              progress 
-            });
+            const baseState = lastWebSocketStateRef.current;
+            if (baseState && player.onStateChange) {
+              player.onStateChange({ 
+                ...baseState, 
+                elapsed, 
+                duration, 
+                progress 
+              });
+            }
           }
         }
       }
@@ -292,7 +295,7 @@ function APIConnectedWrapper({
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [player.state.currentTrack?.id, player.onStateChange]);
+  }, [player.state?.currentTrack?.id, player.onStateChange]);
   
   // Handle audio playback in the browser
   useAudioPlayer(player.state, player.next);
