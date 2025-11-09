@@ -53,11 +53,12 @@ async function main() {
   setupRoutes(app, stateManager, playbackManager);
 
   // Serve UI static files
-  const publicPath = path.join(__dirname, 'public');
-  app.use(express.static(publicPath));
+  // __dirname in dist folder, so go up to service root, then to public
+  const publicPath = path.resolve(__dirname, '../public');
+  app.use('/ui', express.static(publicPath));
   
-  // SPA fallback
-  app.get('/ui/*', (req, res) => {
+  // Serve index.html at /ui root
+  app.get('/ui', (req, res) => {
     res.sendFile(path.join(publicPath, 'index.html'));
   });
 

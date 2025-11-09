@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenFM • Mood-Based Music</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      width: 100%;
+      text-align: center;
+    }
+    
+    .logo {
+      font-size: 72px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .tagline {
+      font-size: 24px;
+      margin-bottom: 40px;
+      opacity: 0.9;
+    }
+    
+    .status {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .status h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    .indicator {
+      width: 12px;
+      height: 12px;
+      background: #10b981;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .endpoints {
+      text-align: left;
+      background: rgba(0,0,0,0.2);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    
+    .endpoint {
+      padding: 12px;
+      margin: 8px 0;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .method {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .method.post {
+      background: rgba(59, 130, 246, 0.2);
+      color: #3b82f6;
+    }
+    
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+    
+    .feature {
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .feature-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+    
+    .feature h3 {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+    
+    .feature p {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    
+    .cta {
+      margin-top: 40px;
+    }
+    
+    .button {
+      display: inline-block;
+      background: white;
+      color: #667eea;
+      padding: 16px 32px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: bold;
+      margin: 0 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+    
+    .button.secondary {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 2px solid white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">OpenFM</div>
+    <div class="tagline">Mood-based music for your stream and desktop</div>
+    
+    <div class="status">
+      <h2>
+        <span class="indicator"></span>
+        Service Running
+      </h2>
+      <p style="margin-bottom: 20px;">The OpenFM service is online and ready to use!</p>
+      
+      <div class="endpoints">
+        <div style="font-weight: bold; margin-bottom: 12px;">Available Endpoints:</div>
+        <div class="endpoint">
+          <span><span class="method">GET</span> /health</span>
+          <span>Health check</span>
+        </div>
+        <div class="endpoint">
+          <span><span class="method">GET</span> /api/state</span>
+          <span>Current state</span>
+        </div>
+        <div class="endpoint">
+          <span><span class="method">GET</span> /api/settings</span>
+          <span>Settings</span>
+        </div>
+        <div class="endpoint">
+          <span><span class="method post">POST</span> /api/playback/play</span>
+          <span>Start playback</span>
+        </div>
+        <div class="endpoint">
+          <span><span class="method">WS</span> /ws</span>
+          <span>WebSocket</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🎵</div>
+        <h3>Mood-Based</h3>
+        <p>5 moods: Epic, Romantic, Funny, Scary, Sad</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🎙️</div>
+        <h3>OBS Plugin</h3>
+        <p>Integrated dock with audio ducking</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🖥️</div>
+        <h3>Desktop App</h3>
+        <p>Native app with system tray</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🌐</div>
+        <h3>Web API</h3>
+        <p>RESTful API + WebSocket</p>
+      </div>
+    </div>
+    
+    <div class="cta">
+      <a href="/api/state" class="button">View API State</a>
+      <a href="https://github.com/openfm/openfm" class="button secondary">View Docs</a>
+    </div>
+    
+    <p style="margin-top: 40px; opacity: 0.7; font-size: 14px;">
+      Version 0.1.0 • Running on http://127.0.0.1:6767
+    </p>
+  </div>
+  
+  <script>
+    // Auto-refresh health check
+    setInterval(async () => {
+      try {
+        const response = await fetch('/health');
+        const data = await response.json();
+        console.log('Health check:', data);
+      } catch (error) {
+        console.error('Health check failed:', error);
+      }
+    }, 30000); // Every 30 seconds
+  </script>
+</body>
+</html>
+
