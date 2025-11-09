@@ -33,11 +33,14 @@ Name: "installmoodpacks"; Description: "Install Starter Mood Packs (Epic, Romant
 ; Service
 Source: "..\..\apps\service\dist\*"; DestDir: "{app}\service"; Flags: ignoreversion recursesubdirs
 
-; Desktop app
+; Desktop app executable
 Source: "..\..\apps\desktop\src-tauri\target\release\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 
+; Desktop app dependencies (if any)
+Source: "..\..\apps\desktop\src-tauri\target\release\*.dll"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+
 ; OBS Plugin
-Source: "..\..\apps\obs-plugin\build\Release\openfm.dll"; DestDir: "{code:GetOBSPluginDir}"; Flags: ignoreversion
+Source: "..\..\apps\obs-plugin\build\Release\openfm.dll"; DestDir: "{code:GetOBSPluginDir}"; Flags: ignoreversion; Check: CheckOBSInstalled
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
@@ -59,5 +62,14 @@ begin
     Result := OBSPath + '\obs-plugins\64bit'
   else
     Result := ExpandConstant('{commonpf}\obs-studio\obs-plugins\64bit');
+end;
+
+function CheckOBSInstalled(): Boolean;
+var
+  OBSPath: String;
+begin
+  Result := RegQueryStringValue(HKLM, 'SOFTWARE\OBS Studio', 'InstallPath', OBSPath) or
+            RegQueryStringValue(HKCU, 'SOFTWARE\OBS Studio', 'InstallPath', OBSPath) or
+            DirExists(ExpandConstant('{commonpf}\obs-studio'));
 end;
 

@@ -16,6 +16,87 @@ export function setupRoutes(
   stateManager: StateManager,
   playbackManager: PlaybackManager
 ) {
+  // Audio file serving endpoint - register early to avoid SPA fallback
+  // Use app.use with a path to catch all /api/audio/* requests
+  app.use('/api/audio', (req, res, next) => {
+    try {
+      // Get the file path from the URL (everything after /api/audio/)
+      // req.path will be like '/D%3A/stuff/...' (without /api/audio prefix)
+      // req.originalUrl will be like '/api/audio/D%3A/stuff/...'
+      let urlPath = req.path;
+      
+      // Remove leading slash if present
+      if (urlPath.startsWith('/')) {
+        urlPath = urlPath.substring(1);
+      }
+      
+      // If path is empty, try to get from originalUrl
+      if (!urlPath && req.originalUrl) {
+        const match = req.originalUrl.match(/^\/api\/audio\/(.+)$/);
+        urlPath = match ? match[1] : '';
+      }
+      
+      if (!urlPath) {
+        return res.status(400).json({ error: 'No file path provided' });
+      }
+      
+      // Decode the URL-encoded path
+      let filePath = decodeURIComponent(urlPath);
+      
+      console.log(`[Audio Route] Request URL: ${req.url}`);
+      console.log(`[Audio Route] Request path: ${req.path}`);
+      console.log(`[Audio Route] Original URL: ${req.originalUrl}`);
+      console.log(`[Audio Route] Extracted path: ${urlPath}`);
+      console.log(`[Audio Route] Decoded path: ${filePath}`);
+      
+      // Convert forward slashes back to backslashes on Windows
+      if (process.platform === 'win32') {
+        filePath = filePath.replace(/\//g, '\\');
+      }
+      
+      console.log(`[Audio Route] Final file path: ${filePath}`);
+      
+      // Security: ensure file exists
+      if (!fs.existsSync(filePath)) {
+        console.error(`[Audio Route] Audio file not found: ${filePath}`);
+        return res.status(404).json({ error: 'File not found', path: filePath });
+      }
+      
+      console.log(`[Audio Route] Serving audio file: ${filePath}`);
+      
+      // Determine content type based on file extension
+      const ext = path.extname(filePath).toLowerCase();
+      const contentTypeMap: Record<string, string> = {
+        '.mp3': 'audio/mpeg',
+        '.wav': 'audio/wav',
+        '.ogg': 'audio/ogg',
+        '.m4a': 'audio/mp4',
+        '.flac': 'audio/flac',
+      };
+      const contentType = contentTypeMap[ext] || 'audio/mpeg';
+      
+      // Set appropriate headers for audio streaming
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Cache-Control', 'no-cache');
+      
+      // Stream the file
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.on('error', (err: Error) => {
+        console.error('Error streaming audio file:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Error streaming audio' });
+        }
+      });
+      fileStream.pipe(res);
+    } catch (error) {
+      console.error('Error serving audio file:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Error serving audio file' });
+      }
+    }
+  });
+  
   // State endpoints
   app.get('/api/state', (req, res) => {
     res.json(stateManager.getState());
@@ -166,14 +247,21 @@ export function setupRoutes(
 
   app.post('/api/playback/progress', (req, res) => {
     const { elapsed, duration, clearLoading } = req.body;
-    if (typeof elapsed !== 'number' || typeof duration !== 'number') {
-      return res.status(400).json({ error: 'elapsed and duration required' });
+    
+    // elapsed and duration are optional (can be 0 or undefined)
+    const updates: any = {};
+    if (typeof elapsed === 'number') {
+      updates.elapsed = elapsed;
     }
-
-    const updates: any = { elapsed, duration, progress: duration > 0 ? elapsed / duration : 0 };
+    if (typeof duration === 'number') {
+      updates.duration = duration;
+      updates.progress = duration > 0 && typeof elapsed === 'number' ? elapsed / duration : 0;
+    }
+    
     if (clearLoading) {
       updates.isLoading = false;
     }
+    
     stateManager.updateState(updates);
     res.json({ success: true });
   });
