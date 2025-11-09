@@ -7,7 +7,11 @@ const API_BASE = 'http://127.0.0.1:6767/api';
  * Hook to handle audio playback in the browser
  * Listens to state changes and plays audio via HTMLAudioElement
  */
-export function useAudioPlayer(state: PlaybackState, onNext: () => void) {
+export function useAudioPlayer(
+  state: PlaybackState, 
+  onNext: () => void,
+  onProgressUpdate?: (elapsed: number, duration: number, progress: number) => void
+) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentTrackIdRef = useRef<string | undefined>(undefined);
 
@@ -290,5 +294,46 @@ export function useAudioPlayer(state: PlaybackState, onNext: () => void) {
       }
     };
   }, [state.currentTrack?.id]);
+
+  // Track progress and send updates to parent via callback
+  useEffect(() => {
+    if (!onProgressUpdate) return;
+
+    let lastUpdateTime = 0;
+    let lastElapsed = 0;
+    const updateThrottleMs = 100; // Update UI every 100ms
+    let animationFrameId: number;
+    
+    const updateProgress = () => {
+      const audio = audioRef.current;
+      if (audio && !audio.paused && audio.duration > 0) {
+        const now = Date.now();
+        
+        // Throttle updates
+        if (now - lastUpdateTime >= updateThrottleMs) {
+          lastUpdateTime = now;
+          
+          const elapsed = audio.currentTime || 0;
+          const duration = audio.duration || 0;
+          const progress = duration > 0 ? elapsed / duration : 0;
+          
+          // Only update if elapsed changed
+          if (Math.abs(elapsed - lastElapsed) > 0.01) {
+            lastElapsed = elapsed;
+            onProgressUpdate(elapsed, duration, progress);
+          }
+        }
+      }
+      animationFrameId = requestAnimationFrame(updateProgress);
+    };
+    
+    animationFrameId = requestAnimationFrame(updateProgress);
+    
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [onProgressUpdate]);
 }
 

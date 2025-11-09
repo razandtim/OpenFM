@@ -35,7 +35,12 @@ export function NowPlaying({
 
   if (!currentTrack) {
     return (
-      <section className={clsx('rounded-3xl border border-white/10 bg-slate-900/60 p-6 text-white shadow-lg', className)}>
+      <section
+        className={clsx(
+          'rounded-3xl border border-white/10 bg-slate-900/60 p-6 text-white shadow-lg',
+          className
+        )}
+      >
         <p className="text-white/60">No track playing</p>
       </section>
     );
@@ -62,24 +67,24 @@ export function NowPlaying({
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <p className="text-xs uppercase tracking-[0.35em] text-white/50">
-              NOW PLAYING
-            </p>
+            <p className="text-xs uppercase tracking-[0.35em] text-white/50">NOW PLAYING</p>
             <span className="text-xs text-white/50">•</span>
             <span className="text-xs">{mood.icon}</span>
             <p className="text-xs font-semibold text-white uppercase">{mood.label.toUpperCase()}</p>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-wider text-white/70">
               {isLoading ? 'Buffering' : isPlaying ? 'Live' : 'PAUSED'}
             </span>
           </div>
         </div>
-        
+
         <div>
           <h2 className="text-3xl font-bold text-white mb-2">{currentTrack.title}</h2>
-          <p className="text-white/70">{currentTrack.artist} • {currentTrack.session || 'Session'}</p>
+          <p className="text-white/70">
+            {currentTrack.artist} • {currentTrack.session || 'Session'}
+          </p>
         </div>
 
         {/* Artwork & Controls */}
@@ -110,9 +115,10 @@ export function NowPlaying({
           <div className="flex flex-col justify-between gap-6">
             {/* Description */}
             <p className="text-white/70 text-sm leading-relaxed">
-              {currentTrack.story || `${currentTrack.title} from ${currentTrack.session || 'the session'} — ${currentTrack.mood === 'epic' ? 'engineered for heroic raids and cinematic finales' : 'perfect for your stream'}.`}
+              {currentTrack.story ||
+                `${currentTrack.title} from ${currentTrack.session || 'the session'} — ${currentTrack.mood === 'epic' ? 'engineered for heroic raids and cinematic finales' : 'perfect for your stream'}.`}
             </p>
-            
+
             {/* Progress */}
             <div className="space-y-2">
               <div className="h-1 w-full rounded-full bg-white/10">
@@ -155,8 +161,6 @@ export function NowPlaying({
           </div>
         </div>
       </div>
-
     </section>
   );
 }
-

@@ -245,60 +245,22 @@ function APIConnectedWrapper({
     }
   }, [state, player.onStateChange]);
   
-  React.useEffect(() => {
-    // Find the audio element and track its progress
-    const audioElements = document.getElementsByTagName('audio');
-    if (audioElements.length === 0) return;
-    
-    const audio = audioElements[0];
-    let lastUpdateTime = 0;
-    let lastElapsed = 0;
-    const updateThrottleMs = 100; // Update UI every 100ms (10 times per second)
-    let animationFrameId: number;
-    
-    const updateProgress = () => {
-      if (audio && !audio.paused && audio.duration > 0) {
-        const now = Date.now();
-        
-        // Throttle updates to avoid too many state changes
-        if (now - lastUpdateTime >= updateThrottleMs) {
-          lastUpdateTime = now;
-          
-          const elapsed = audio.currentTime || 0;
-          const duration = audio.duration || 0;
-          const progress = duration > 0 ? elapsed / duration : 0;
-          
-          // Only update if elapsed actually changed
-          if (Math.abs(elapsed - lastElapsed) > 0.01) {
-            lastElapsed = elapsed;
-            
-            // Use the last WebSocket state as base to avoid overwriting backend changes
-            const baseState = lastWebSocketStateRef.current;
-            if (baseState && player.onStateChange) {
-              player.onStateChange({ 
-                ...baseState, 
-                elapsed, 
-                duration, 
-                progress 
-              });
-            }
-          }
-        }
-      }
-      animationFrameId = requestAnimationFrame(updateProgress);
-    };
-    
-    animationFrameId = requestAnimationFrame(updateProgress);
-    
-    return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-    };
-  }, [player.state?.currentTrack?.id, player.onStateChange]);
+  // Handle progress updates from audio player
+  const handleProgressUpdate = React.useCallback((elapsed: number, duration: number, progress: number) => {
+    // Use the last WebSocket state as base to avoid overwriting backend changes
+    const baseState = lastWebSocketStateRef.current;
+    if (baseState && player.onStateChange) {
+      player.onStateChange({ 
+        ...baseState, 
+        elapsed, 
+        duration, 
+        progress 
+      });
+    }
+  }, [player.onStateChange]);
   
   // Handle audio playback in the browser
-  useAudioPlayer(player.state, player.next);
+  useAudioPlayer(player.state, player.next, handleProgressUpdate);
 
   // Override actions to call API
   const originalSetMood = player.setMood;
