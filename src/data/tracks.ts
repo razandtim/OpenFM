@@ -142,6 +142,7 @@ const scaryEntries: Array<[string, string]> = [
   ["Basement_Door_at_317_2025-11-08T153547.mp3", "Basement Door at 3:17"],
   ["Blackwater_Ritual_2025-11-08T150054.mp3", "Blackwater Ritual"],
   ["Forest_of_Teeth_2025-11-08T154307.mp3", "Forest of Teeth"],
+  ["Graveyard_Telemetry_2025-11-08T155532.mp3", "Graveyard Telemetry"],
   ["Lurkers_Footsteps_2025-11-08T145508.mp3", "Lurker's Footsteps"],
   ["Mirror Game.mp3", "Mirror Game"],
   ["Static_on_Channel_7_2025-11-08T154045.mp3", "Static on Channel 7"],

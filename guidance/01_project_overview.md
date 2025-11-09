@@ -41,9 +41,13 @@
 - All audio assets are locally hosted (public folder) or sourced from royalty-free libraries with permissive licenses.
 - MVP avoids auth; future sponsor portal can extend the same Next.js instance.
 
-### Open Questions / Next Steps
-- Validate audio source licensing (royalty-free vs generated placeholders).
-- Decide on fallback behavior when track list exhausts (loop vs shuffle).
-- Confirm whether sponsor CTA is mandatory for Day 1.
-- Gather reference assets (icons, background textures) once visual direction is approved.
+### Implementation Decisions
+- **Audio licensing**: Ship with the bundled `public/songs/<Mood>` library, which is sourced from
+  royalty-free hackathon stems and documented in the repo README for streamer reuse.
+- **Playback fallback**: Player context rebuilds the queue via `buildQueueForMood` whenever the active
+  list ends, ensuring endless shuffle without repeating order mid-cycle.
+- **Sponsor CTA**: Optional at launch; the hero contains the primary CTA (`Download Stream Kit`) and
+  the dedicated `SponsorSpot` component in `src/components` is ready for slotting when a partner signs on.
+- **Reference assets**: Palette, font pairing, icons, and overlay pack live in `public/stream-kit.zip`
+  (plus inline emoji glyphs per mood), giving designers a single download for mood badges and gradients.
 

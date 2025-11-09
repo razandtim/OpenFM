@@ -1,0 +1,10 @@
+
+> openfm@0.1.0 start
+> next start -p 3051
+
+   ▲ Next.js 16.0.1
+   - Local:        http://localhost:3051
+   - Network:      http://10.5.0.2:3051
+
+ ✓ Starting...
+ ✓ Ready in 875ms
