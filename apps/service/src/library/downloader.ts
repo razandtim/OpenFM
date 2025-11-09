@@ -4,9 +4,9 @@
 
 import fetch from 'node-fetch';
 import fs from 'fs/promises';
+import { createReadStream, createWriteStream } from 'fs';
 import path from 'path';
 import unzipper from 'unzipper';
-import { createWriteStream } from 'fs';
 import { pipeline } from 'stream/promises';
 
 const CATALOG_URL = process.env.OPENFM_CATALOG_URL || 'https://openfm.example.com/catalog.json';
@@ -67,8 +67,7 @@ export async function downloadMoodPack(
 
   // Extract ZIP
   console.log(`Extracting mood pack: ${moodId}`);
-  await fs
-    .createReadStream(zipPath)
+  await createReadStream(zipPath)
     .pipe(unzipper.Extract({ path: targetDir }))
     .promise();
 

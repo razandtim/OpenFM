@@ -20,7 +20,7 @@ import { StateManager } from './state/manager.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PORT = process.env.OPENFM_PORT || 6767;
+const PORT = parseInt(process.env.OPENFM_PORT || '6767', 10);
 const HOST = '127.0.0.1';
 
 async function main() {
