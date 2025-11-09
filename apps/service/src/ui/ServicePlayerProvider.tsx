@@ -199,7 +199,7 @@ export function ServicePlayerProvider({ children }: ServicePlayerProviderProps) 
       onStateChange={handleStateChange}
       onSettingsChange={handleSettingsChange}
     >
-      <APIConnectedWrapper apiCall={apiCall}>
+      <APIConnectedWrapper apiCall={apiCall} state={state}>
         {children}
       </APIConnectedWrapper>
     </PlayerProvider>
@@ -209,10 +209,12 @@ export function ServicePlayerProvider({ children }: ServicePlayerProviderProps) 
 // Wrapper component that intercepts PlayerContext actions and calls API
 function APIConnectedWrapper({ 
   children, 
-  apiCall 
+  apiCall,
+  state
 }: { 
   children: React.ReactNode;
   apiCall: (endpoint: string, options?: RequestInit) => Promise<any>;
+  state: PlaybackState | null;
 }) {
   const player = usePlayer();
   
