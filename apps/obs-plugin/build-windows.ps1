@@ -1,8 +1,9 @@
 #!/usr/bin/env pwsh
-# Build script for OpenFM OBS Plugin on Windows
+# Build script for OpenFM OBS plugin on Windows
 
 param(
     [string]$ObsPath = $null,
+    [string]$ObsSourcePath = $null,
     [string]$QtPath = $null,
     [switch]$Install = $false,
     [switch]$Clean = $false
@@ -10,128 +11,171 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "🎬 OpenFM OBS Plugin Build Script (Windows)" -ForegroundColor Cyan
+Write-Host "[*] OpenFM OBS Plugin Build Script (Windows)" -ForegroundColor Cyan
 Write-Host "============================================`n" -ForegroundColor Cyan
 
-# Detect OBS installation
-if (-not $ObsPath) {
-    $possiblePaths = @(
-        "$env:ProgramFiles\obs-studio",
-        "$env:ProgramFiles (x86)\obs-studio",
-        "$env:LOCALAPPDATA\obs-studio"
-    )
-    
-    foreach ($path in $possiblePaths) {
-        if (Test-Path $path) {
-            $ObsPath = $path
-            Write-Host "✓ Found OBS Studio at: $ObsPath" -ForegroundColor Green
-            break
-        }
-    }
-    
-    if (-not $ObsPath) {
-        Write-Host "✗ OBS Studio not found. Please install OBS or specify path with -ObsPath" -ForegroundColor Red
-        exit 1
+$scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+Push-Location $scriptRoot
+
+try {
+
+# Locate CMake
+$cmakeExe = $null
+$cmakeCandidates = @()
+$cmakeCmd = Get-Command cmake -ErrorAction SilentlyContinue
+if ($cmakeCmd) {
+    $cmakeCandidates += $cmakeCmd.Source
+}
+$cmakeCandidates += "D:\tools\cmake\cmake-3.29.6-windows-x86_64\bin\cmake.exe"
+
+foreach ($candidate in $cmakeCandidates) {
+    if ($candidate -and (Test-Path $candidate)) {
+        $cmakeExe = $candidate
+        break
     }
 }
 
-# Detect Qt installation
-if (-not $QtPath) {
-    $qtPaths = @(
-        "C:\Qt\6.7.0\msvc2019_64",
-        "C:\Qt\6.6.0\msvc2019_64",
-        "C:\Qt\6.5.0\msvc2019_64"
+if (-not $cmakeExe) {
+    Write-Host "[err] CMake not found. Install CMake or add it to PATH." -ForegroundColor Red
+    exit 1
+}
+
+# Helper to run cmake with logging
+function Invoke-CMake {
+    param(
+        [string[]]$Arguments
     )
-    
-    foreach ($path in $qtPaths) {
-        if (Test-Path $path) {
-            $QtPath = $path
-            Write-Host "✓ Found Qt at: $QtPath" -ForegroundColor Green
-            break
+
+    & $cmakeExe @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "CMake command failed: $($Arguments -join ' ')"
+    }
+}
+
+    # Discover OBS installation
+    if (-not $ObsPath) {
+        $candidateObsPaths = @(
+            "$env:ProgramFiles\obs-studio",
+            "$env:ProgramFiles (x86)\obs-studio",
+            "$env:LOCALAPPDATA\obs-studio"
+        )
+
+        foreach ($path in $candidateObsPaths) {
+            if (Test-Path $path) {
+                $ObsPath = $path
+                break
+            }
         }
     }
-    
+
+    if (-not $ObsPath) {
+        Write-Host "[err] OBS Studio not found. Set -ObsPath to your OBS installation." -ForegroundColor Red
+        exit 1
+    }
+
+    Write-Host "[ok] Using OBS Studio at: $ObsPath" -ForegroundColor Green
+
+    # Discover Qt installation
     if (-not $QtPath) {
-        Write-Host "⚠ Qt not found. Looking in PATH..." -ForegroundColor Yellow
+        $envCandidates = @()
+        if ($env:QT_PATH -and (Test-Path $env:QT_PATH)) {
+            $envCandidates += $env:QT_PATH
+        }
+        if ($env:Qt6_DIR -and (Test-Path $env:Qt6_DIR)) {
+            $envCandidates += (Split-Path -Parent (Split-Path -Parent $env:Qt6_DIR))
+        }
+        $envCandidates = $envCandidates | Select-Object -Unique
+
+        if ($envCandidates.Count -gt 0) {
+            $QtPath = $envCandidates[0]
+        }
+    }
+
+    if (-not $QtPath) {
+        $candidateQtPaths = @(
+            "C:\Qt\6.7.0\msvc2019_64",
+            "C:\Qt\6.6.0\msvc2019_64",
+            "C:\Qt\6.5.0\msvc2019_64",
+            "D:\Qt\6.7.0\msvc2019_64"
+        )
+
+        foreach ($path in $candidateQtPaths) {
+            if (Test-Path $path) {
+                $QtPath = $path
+                break
+            }
+        }
+    }
+
+    if (-not $QtPath) {
         $qmake = Get-Command qmake -ErrorAction SilentlyContinue
         if ($qmake) {
             $QtPath = Split-Path (Split-Path $qmake.Path)
-            Write-Host "✓ Found Qt at: $QtPath" -ForegroundColor Green
-        } else {
-            Write-Host "✗ Qt not found. Please install Qt 6.x or specify path with -QtPath" -ForegroundColor Red
-            Write-Host "  Download from: https://www.qt.io/download-qt-installer" -ForegroundColor Yellow
-            exit 1
         }
     }
-}
 
-# Clean build directory
-if ($Clean -and (Test-Path "build")) {
-    Write-Host "`n🧹 Cleaning build directory..." -ForegroundColor Yellow
-    Remove-Item -Recurse -Force build
-}
-
-# Create build directory
-Write-Host "`n📁 Creating build directory..." -ForegroundColor Cyan
-New-Item -ItemType Directory -Force -Path build | Out-Null
-Set-Location build
-
-# Configure with CMake
-Write-Host "`n⚙️  Configuring with CMake..." -ForegroundColor Cyan
-cmake -G "Visual Studio 17 2022" -A x64 `
-    -DCMAKE_BUILD_TYPE=Release `
-    -DOBS_DIR="$ObsPath" `
-    -DQt6_DIR="$QtPath\lib\cmake\Qt6" `
-    ..
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "`n✗ CMake configuration failed!" -ForegroundColor Red
-    exit 1
-}
-
-# Build
-Write-Host "`n🔨 Building plugin..." -ForegroundColor Cyan
-cmake --build . --config Release
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "`n✗ Build failed!" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "`n✓ Build completed successfully!" -ForegroundColor Green
-
-# Install
-if ($Install) {
-    Write-Host "`n📦 Installing plugin..." -ForegroundColor Cyan
-    
-    $pluginDest = "$env:APPDATA\obs-studio\obs-plugins\64bit"
-    $dataDest = "$env:APPDATA\obs-studio\data\obs-plugins\openfm"
-    
-    # Create directories
-    New-Item -ItemType Directory -Force -Path $pluginDest | Out-Null
-    New-Item -ItemType Directory -Force -Path $dataDest | Out-Null
-    
-    # Copy plugin DLL
-    Copy-Item "Release\openfm.dll" -Destination $pluginDest -Force
-    Write-Host "  ✓ Copied openfm.dll to $pluginDest" -ForegroundColor Green
-    
-    # Copy data files if they exist
-    if (Test-Path "..\data") {
-        Copy-Item -Recurse "..\data\*" -Destination $dataDest -Force
-        Write-Host "  ✓ Copied data files to $dataDest" -ForegroundColor Green
+    if (-not $QtPath) {
+        Write-Host "[err] Qt 6 installation not found. Set -QtPath to your Qt root." -ForegroundColor Red
+        exit 1
     }
-    
-    Write-Host "`n✓ Plugin installed successfully!" -ForegroundColor Green
-    Write-Host "  Restart OBS Studio to load the plugin" -ForegroundColor Yellow
-}
 
-# Return to original directory
-Set-Location ..
+    Write-Host "[ok] Using Qt at: $QtPath" -ForegroundColor Green
 
-Write-Host "`n🎉 All done!" -ForegroundColor Green
-Write-Host "`nBuild location: $(Get-Location)\build\Release\openfm.dll" -ForegroundColor Cyan
+    $qtCmakeDir = Join-Path $QtPath "lib\cmake\Qt6"
+    if (-not (Test-Path $qtCmakeDir)) {
+        Write-Host "[err] Qt CMake directory not found at $qtCmakeDir" -ForegroundColor Red
+        exit 1
+    }
 
-if (-not $Install) {
-    Write-Host "`nTo install the plugin, run:" -ForegroundColor Yellow
-    Write-Host "  .\build-windows.ps1 -Install" -ForegroundColor White
+    # Clean build directory if requested
+    if ($Clean -and (Test-Path "build")) {
+        Write-Host "`n[info] Cleaning build directory..." -ForegroundColor Yellow
+        Remove-Item -Recurse -Force "build"
+    }
+
+    # Ensure build directory exists
+    New-Item -ItemType Directory -Force -Path "build" | Out-Null
+
+    Push-Location "build"
+
+    try {
+        Write-Host "`n[1/3] Configuring with CMake..." -ForegroundColor Cyan
+        Invoke-CMake -Arguments @(
+            "-G", "Visual Studio 17 2022",
+            "-A", "x64",
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DOBS_DIR=$ObsPath",
+            "-DCMAKE_PREFIX_PATH=$QtPath",
+            "-DQt6_DIR=$qtCmakeDir",
+            ".."
+        )
+
+        Write-Host "[2/3] Building plugin..." -ForegroundColor Cyan
+        Invoke-CMake -Arguments @("--build", ".", "--config", "Release")
+
+        Write-Host "[ok] Build completed successfully" -ForegroundColor Green
+
+        if ($Install) {
+            Write-Host "`n[3/3] Installing plugin..." -ForegroundColor Cyan
+            $pluginDest = Join-Path $env:APPDATA "obs-studio\obs-plugins\64bit"
+            $dataDest = Join-Path $env:APPDATA "obs-studio\data\obs-plugins\openfm"
+
+            New-Item -ItemType Directory -Force -Path $pluginDest | Out-Null
+            New-Item -ItemType Directory -Force -Path $dataDest | Out-Null
+
+            Copy-Item "Release\openfm.dll" -Destination $pluginDest -Force
+            if (Test-Path "..\data") {
+                Copy-Item -Recurse "..\data\*" -Destination $dataDest -Force
+            }
+
+            Write-Host "[ok] Plugin installed to $pluginDest" -ForegroundColor Green
+        }
+    } finally {
+        Pop-Location
+    }
+
+    $artifactPath = Join-Path $scriptRoot "build\Release"
+    Write-Host "`nArtifacts available under: $artifactPath" -ForegroundColor Cyan
+} finally {
+    Pop-Location
 }
