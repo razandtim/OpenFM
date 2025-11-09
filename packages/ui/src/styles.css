@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply antialiased;
+  }
+  
+  body {
+    @apply bg-slate-950 text-white;
+  }
+}
+
+@layer utilities {
+  .bg-grid {
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+  
+  .horizontal-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .horizontal-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
