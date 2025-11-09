@@ -40,8 +40,8 @@ void OpenFMDock::setup_ui()
 
 void OpenFMDock::load_service_ui()
 {
-    // Load UI from local OpenFM service
-    const QString service_url = "http://127.0.0.1:6767/ui";
+    // Load UI from local OpenFM service - point to player route
+    const QString service_url = "http://127.0.0.1:6767/player";
     
     blog(LOG_INFO, "[OpenFM] Loading UI from %s", service_url.toStdString().c_str());
     web_view_->setUrl(QUrl(service_url));
