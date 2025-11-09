@@ -65,7 +65,9 @@ export function OpenFMApp({
   className,
 }: OpenFMAppProps) {
   const player = usePlayer();
-  const { state, settings, setMood, togglePlay, next, previous, setMode, toggleMute, setCrossfade, setVolume, updateSettings } = player;
+  // Don't destructure functions - use player.function() to ensure we always call the latest version
+  // This allows service wrappers to override these functions dynamically
+  const { state, settings } = player;
   
   const [showAuth, setShowAuth] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -204,7 +206,7 @@ export function OpenFMApp({
               <div className="h-full w-full max-w-2xl">
               <Settings
                 settings={settings}
-                onSettingsChange={updateSettings}
+                onSettingsChange={(s) => player.updateSettings(s)}
                 onClose={() => setShowSettings(false)}
                 libraryRoot={libraryRoot}
                 onLibraryRootChange={onLibraryRootChange}
@@ -215,9 +217,9 @@ export function OpenFMApp({
                 onAudioPriorityChange={onAudioPriorityChange}
                 availableOBSSources={availableOBSSources}
                 volume={state.volume}
-                onVolumeChange={setVolume}
+                onVolumeChange={(v) => player.setVolume(v)}
                 crossfadeDuration={state.crossfadeDuration}
-                onCrossfadeChange={setCrossfade}
+                onCrossfadeChange={(d) => player.setCrossfade(d)}
               />
               </div>
             </div>
@@ -234,8 +236,8 @@ export function OpenFMApp({
             elapsed={state.elapsed}
             duration={state.duration}
             progress={state.progress}
-            onTogglePlay={togglePlay}
-            onNext={next}
+            onTogglePlay={() => player.togglePlay()}
+            onNext={() => player.next()}
           />
 
           {/* Mood Selector - Always show for local mode */}
@@ -243,7 +245,7 @@ export function OpenFMApp({
             currentMood={state.currentMood || 'epic'}
             onMoodSelect={(mood) => {
               console.log('Mood selected:', mood);
-              setMood(mood);
+              player.setMood(mood);
             }}
             enabledMoods={enabledMoods}
             isLoading={state.isLoading}

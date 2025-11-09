@@ -44,7 +44,7 @@ export function Sidebar({
           )}
         >
           <Home className="h-5 w-5" />
-          <span>hom</span>
+          <span>Home</span>
         </Link>
         <Link
           to="/player"
@@ -54,7 +54,7 @@ export function Sidebar({
           )}
         >
           <Music className="h-5 w-5" />
-          <span>muzic</span>
+          <span>Music</span>
         </Link>
         <Link
           to="/player"
@@ -64,7 +64,7 @@ export function Sidebar({
           )}
         >
           <Library className="h-5 w-5" />
-          <span>library</span>
+          <span>Library</span>
         </Link>
         <Link
           to="/player"
@@ -74,7 +74,7 @@ export function Sidebar({
           )}
         >
           <Heart className="h-5 w-5" />
-          <span>What&apos;s ur mood</span>
+          <span>What&apos;s your mood?</span>
         </Link>
       </nav>
 
@@ -111,8 +111,6 @@ export function Sidebar({
           </button>
         )}
       </div>
-
     </aside>
   );
 }
-

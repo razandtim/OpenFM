@@ -196,12 +196,17 @@ export function setupRoutes(
 
   // Playback control endpoints
   app.post('/api/playback/mood', (req, res) => {
+    console.log('[Mood API] Request body:', req.body);
     const { mood } = req.body;
+    console.log('[Mood API] Extracted mood:', mood);
     if (!mood) {
+      console.log('[Mood API] ERROR: No mood provided');
       return res.status(400).json({ error: 'mood required' });
     }
 
+    console.log('[Mood API] Calling stateManager.setMood with:', mood);
     stateManager.setMood(mood);
+    console.log('[Mood API] Mood set successfully');
     res.json({ success: true });
   });
 
