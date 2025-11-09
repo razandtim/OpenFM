@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import clsx from 'clsx';
+import { X, LogOut, Mail, Lock, Loader2 } from 'lucide-react';
 
 export interface AuthProps {
   isSignedIn: boolean;
@@ -43,25 +44,39 @@ export function Auth({
           <button
             type="button"
             onClick={onClose}
-            className="text-white/60 hover:text-white"
+            className="rounded-lg p-1 text-white/60 transition hover:bg-white/10 hover:text-white"
+            aria-label="Close"
           >
-            ✕
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-            <p className="text-sm text-white/60">Signed in as</p>
-            <p className="font-medium">{userEmail}</p>
+          <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4">
+            <Mail className="h-5 w-5 text-white/60" />
+            <div>
+              <p className="text-sm text-white/60">Signed in as</p>
+              <p className="font-medium">{userEmail}</p>
+            </div>
           </div>
 
           <button
             type="button"
             onClick={onSignOut}
             disabled={isLoading}
-            className="w-full rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
           >
-            Sign Out
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Signing out...
+              </>
+            ) : (
+              <>
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -77,9 +92,10 @@ export function Auth({
         <button
           type="button"
           onClick={onClose}
-          className="text-white/60 hover:text-white"
+          className="rounded-lg p-1 text-white/60 transition hover:bg-white/10 hover:text-white"
+          aria-label="Close"
         >
-          ✕
+          <X className="h-5 w-5" />
         </button>
       </div>
 
@@ -124,9 +140,19 @@ export function Auth({
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-lg bg-accent px-4 py-3 text-sm font-medium text-white transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-sm font-medium text-white transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
-          {isLoading ? 'Please wait...' : mode === 'signin' ? 'Sign In' : 'Sign Up'}
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Please wait...
+            </>
+          ) : (
+            <>
+              <Lock className="h-4 w-4" />
+              {mode === 'signin' ? 'Sign In' : 'Sign Up'}
+            </>
+          )}
         </button>
 
         <button

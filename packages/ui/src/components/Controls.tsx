@@ -1,5 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
+import { Volume2, VolumeX, Eye, EyeOff } from 'lucide-react';
 
 export interface ControlsProps {
   crossfadeDuration: number;
@@ -80,16 +81,31 @@ export function Controls({
             type="button"
             onClick={onMuteToggle}
             className={clsx(
-              'rounded-lg px-4 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+              'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent',
               isMuted
                 ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
                 : 'bg-white/10 text-white hover:bg-white/20'
             )}
           >
-            {isMuted ? 'Unmute All' : 'Mute All'}
+            {isMuted ? (
+              <>
+                <VolumeX className="h-4 w-4" />
+                Unmute All
+              </>
+            ) : (
+              <>
+                <Volume2 className="h-4 w-4" />
+                Mute All
+              </>
+            )}
           </button>
 
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-3">
+            {showOverlay ? (
+              <Eye className="h-4 w-4 text-white/60" />
+            ) : (
+              <EyeOff className="h-4 w-4 text-white/60" />
+            )}
             <span className="text-sm">Show Overlay</span>
             <button
               type="button"

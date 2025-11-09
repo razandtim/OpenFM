@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
-import { PlayCircleIcon, PauseCircleIcon, ForwardIcon, BackwardIcon } from '@heroicons/react/24/solid';
+import { PlayCircle, PauseCircle, SkipForward, SkipBack, X, List } from 'lucide-react';
 import { getMoodConfig, formatDuration, type Track, type MoodId } from '@openfm/core';
 
 export interface NowPlayingProps {
@@ -83,8 +83,9 @@ export function NowPlaying({
               <button
                 type="button"
                 onClick={() => setShowQueue(!showQueue)}
-                className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium transition hover:border-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium transition hover:border-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
+                <List className="h-4 w-4" />
                 Queue ({queue.length})
               </button>
             )}
@@ -139,7 +140,7 @@ export function NowPlaying({
                 className="flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white transition hover:border-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label="Previous track"
               >
-                <BackwardIcon className="h-5 w-5" />
+                <SkipBack className="h-5 w-5" />
               </button>
 
               <button
@@ -150,9 +151,9 @@ export function NowPlaying({
                 aria-label={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
-                  <PauseCircleIcon className="h-8 w-8" />
+                  <PauseCircle className="h-8 w-8" />
                 ) : (
-                  <PlayCircleIcon className="h-8 w-8" />
+                  <PlayCircle className="h-8 w-8" />
                 )}
               </button>
 
@@ -162,7 +163,7 @@ export function NowPlaying({
                 className="flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white transition hover:border-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label="Next track"
               >
-                <ForwardIcon className="h-5 w-5" />
+                <SkipForward className="h-5 w-5" />
               </button>
             </div>
           </div>
@@ -183,9 +184,10 @@ export function NowPlaying({
               <button
                 type="button"
                 onClick={() => setShowQueue(false)}
-                className="text-white/60 hover:text-white"
+                className="rounded-lg p-1 text-white/60 transition hover:bg-white/10 hover:text-white"
+                aria-label="Close queue"
               >
-                ✕
+                <X className="h-5 w-5" />
               </button>
             </div>
             

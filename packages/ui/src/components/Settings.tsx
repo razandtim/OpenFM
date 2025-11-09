@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import clsx from 'clsx';
+import { X, RefreshCw, Save, Trash } from 'lucide-react';
 import type { PlayerSettings } from '@openfm/core';
 
 export interface SettingsProps {
@@ -47,9 +48,10 @@ export function Settings({
         <button
           type="button"
           onClick={onClose}
-          className="text-white/60 hover:text-white"
+          className="rounded-lg p-1 text-white/60 transition hover:bg-white/10 hover:text-white"
+          aria-label="Close settings"
         >
-          ✕
+          <X className="h-5 w-5" />
         </button>
       </div>
 
@@ -246,8 +248,9 @@ export function Settings({
                   <button
                     type="button"
                     onClick={onLibraryRescan}
-                    className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium transition hover:bg-white/10"
+                    className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium transition hover:bg-white/10"
                   >
+                    <RefreshCw className="h-4 w-4" />
                     Rescan
                   </button>
                 )}
@@ -306,8 +309,9 @@ export function Settings({
             <button
               type="button"
               onClick={() => onSunoApiKeyChange?.(tempApiKey)}
-              className="w-full rounded-lg bg-accent px-4 py-3 text-sm font-medium text-white transition hover:bg-accent/90"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-sm font-medium text-white transition hover:bg-accent/90"
             >
+              <Save className="h-4 w-4" />
               Save API Key
             </button>
 
@@ -318,8 +322,9 @@ export function Settings({
                   onSunoApiKeyChange?.('');
                   setTempApiKey('');
                 }}
-                className="w-full rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500/20"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500/20"
               >
+                <Trash className="h-4 w-4" />
                 Clear API Key
               </button>
             )}
