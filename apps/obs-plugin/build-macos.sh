@@ -1,15 +1,7 @@
 #!/bin/bash
-# OpenFM OBS Plugin - macOS Build Script
+# Build script for OpenFM OBS Plugin on macOS
 
 set -e
-
-BUILD_TYPE="${1:-Release}"
-INSTALL_FLAG="${2:-}"
-
-echo "========================================"
-echo "OpenFM OBS Plugin - Build Script (macOS)"
-echo "========================================"
-echo ""
 
 # Colors
 RED='\033[0;31m'
@@ -18,124 +10,161 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Check prerequisites
-echo -e "${YELLOW}Checking prerequisites...${NC}"
+OBS_PATH=""
+QT_PATH=""
+INSTALL=false
+CLEAN=false
 
-# Check CMake
-if ! command -v cmake &> /dev/null; then
-    echo -e "${RED}❌ CMake not found! Install with: brew install cmake${NC}"
-    exit 1
-fi
-CMAKE_VERSION=$(cmake --version | head -n1 | awk '{print $3}')
-echo -e "${GREEN}✅ CMake $CMAKE_VERSION found${NC}"
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --obs-path)
+            OBS_PATH="$2"
+            shift 2
+            ;;
+        --qt-path)
+            QT_PATH="$2"
+            shift 2
+            ;;
+        --install)
+            INSTALL=true
+            shift
+            ;;
+        --clean)
+            CLEAN=true
+            shift
+            ;;
+        *)
+            echo -e "${RED}Unknown option: $1${NC}"
+            exit 1
+            ;;
+    esac
+done
 
-# Check Qt6
-if [ -z "$Qt6_DIR" ]; then
-    # Try default Homebrew location
-    if [ -d "/opt/homebrew/opt/qt@6" ]; then
-        export Qt6_DIR="/opt/homebrew/opt/qt@6"
-    elif [ -d "/usr/local/opt/qt@6" ]; then
-        export Qt6_DIR="/usr/local/opt/qt@6"
-    else
-        echo -e "${RED}❌ Qt6 not found! Install with: brew install qt@6${NC}"
-        echo -e "${YELLOW}Or set Qt6_DIR environment variable${NC}"
+echo -e "${CYAN}🎬 OpenFM OBS Plugin Build Script (macOS)${NC}"
+echo -e "${CYAN}===========================================${NC}\n"
+
+# Detect OBS installation
+if [ -z "$OBS_PATH" ]; then
+    POSSIBLE_PATHS=(
+        "/Applications/OBS.app"
+        "$HOME/Applications/OBS.app"
+    )
+    
+    for path in "${POSSIBLE_PATHS[@]}"; do
+        if [ -d "$path" ]; then
+            OBS_PATH="$path"
+            echo -e "${GREEN}✓ Found OBS Studio at: $OBS_PATH${NC}"
+            break
+        fi
+    done
+    
+    if [ -z "$OBS_PATH" ]; then
+        echo -e "${RED}✗ OBS Studio not found. Please install OBS or specify path with --obs-path${NC}"
         exit 1
     fi
 fi
 
-if [ ! -d "$Qt6_DIR" ]; then
-    echo -e "${RED}❌ Qt6 directory not found: $Qt6_DIR${NC}"
-    exit 1
-fi
-echo -e "${GREEN}✅ Qt6 found at: $Qt6_DIR${NC}"
-
-# Check OBS Source
-if [ -z "$OBS_SOURCE_DIR" ]; then
-    # Try default location
-    if [ -d "$HOME/obs-studio" ]; then
-        export OBS_SOURCE_DIR="$HOME/obs-studio"
-    else
-        echo -e "${RED}❌ OBS_SOURCE_DIR not set!${NC}"
-        echo -e "${YELLOW}Clone OBS: git clone --recursive https://github.com/obsproject/obs-studio.git ~/obs-studio${NC}"
-        echo -e "${YELLOW}Or set: export OBS_SOURCE_DIR=~/obs-studio${NC}"
-        exit 1
+# Detect Qt installation
+if [ -z "$QT_PATH" ]; then
+    QT_PATHS=(
+        "$HOME/Qt/6.7.0/macos"
+        "$HOME/Qt/6.6.0/macos"
+        "$HOME/Qt/6.5.0/macos"
+        "/usr/local/opt/qt@6"
+        "/opt/homebrew/opt/qt@6"
+    )
+    
+    for path in "${QT_PATHS[@]}"; do
+        if [ -d "$path" ]; then
+            QT_PATH="$path"
+            echo -e "${GREEN}✓ Found Qt at: $QT_PATH${NC}"
+            break
+        fi
+    done
+    
+    if [ -z "$QT_PATH" ]; then
+        echo -e "${YELLOW}⚠ Qt not found. Checking Homebrew...${NC}"
+        if command -v brew &> /dev/null; then
+            QT_PATH=$(brew --prefix qt@6 2>/dev/null || true)
+            if [ -n "$QT_PATH" ]; then
+                echo -e "${GREEN}✓ Found Qt via Homebrew at: $QT_PATH${NC}"
+            else
+                echo -e "${RED}✗ Qt not found. Install with: brew install qt@6${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${RED}✗ Qt not found and Homebrew not available${NC}"
+            echo -e "${YELLOW}  Install Qt from: https://www.qt.io/download-qt-installer${NC}"
+            echo -e "${YELLOW}  Or install Homebrew and run: brew install qt@6${NC}"
+            exit 1
+        fi
     fi
 fi
 
-if [ ! -d "$OBS_SOURCE_DIR" ]; then
-    echo -e "${RED}❌ OBS source directory not found: $OBS_SOURCE_DIR${NC}"
-    exit 1
+# Clean build directory
+if [ "$CLEAN" = true ] && [ -d "build" ]; then
+    echo -e "\n${YELLOW}🧹 Cleaning build directory...${NC}"
+    rm -rf build
 fi
-echo -e "${GREEN}✅ OBS source found at: $OBS_SOURCE_DIR${NC}"
-
-echo ""
 
 # Create build directory
-echo -e "${YELLOW}Configuring CMake...${NC}"
+echo -e "\n${CYAN}📁 Creating build directory...${NC}"
 mkdir -p build
 cd build
 
-# Configure
-cmake .. \
-    -DQt6_DIR="$Qt6_DIR/lib/cmake/Qt6" \
-    -DCMAKE_PREFIX_PATH="$Qt6_DIR" \
-    -DOBS_SOURCE_DIR="$OBS_SOURCE_DIR" \
-    -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
-
-echo -e "${GREEN}✅ CMake configured successfully${NC}"
-echo ""
+# Configure with CMake
+echo -e "\n${CYAN}⚙️  Configuring with CMake...${NC}"
+cmake -G "Unix Makefiles" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DOBS_DIR="$OBS_PATH/Contents" \
+    -DQt6_DIR="$QT_PATH/lib/cmake/Qt6" \
+    -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
+    ..
 
 # Build
-echo -e "${YELLOW}Building plugin ($BUILD_TYPE)...${NC}"
-cmake --build . --config "$BUILD_TYPE"
+echo -e "\n${CYAN}🔨 Building plugin...${NC}"
+cmake --build . --config Release
 
-echo -e "${GREEN}✅ Build completed successfully${NC}"
-echo ""
+echo -e "\n${GREEN}✓ Build completed successfully!${NC}"
 
-# Install if requested
-if [ "$INSTALL_FLAG" = "--install" ]; then
-    echo -e "${YELLOW}Installing plugin to OBS...${NC}"
+# Install
+if [ "$INSTALL" = true ]; then
+    echo -e "\n${CYAN}📦 Installing plugin...${NC}"
     
-    OBS_PLUGIN_DIR="/Applications/OBS.app/Contents/PlugIns"
-    PLUGIN_SO="openfm-obs.so"
+    PLUGIN_DEST="$HOME/Library/Application Support/obs-studio/obs-plugins"
+    DATA_DEST="$HOME/Library/Application Support/obs-studio/data/obs-plugins/openfm"
     
-    if [ ! -f "$PLUGIN_SO" ]; then
-        echo -e "${RED}❌ Plugin not found: $PLUGIN_SO${NC}"
-        exit 1
+    # Create directories
+    mkdir -p "$PLUGIN_DEST"
+    mkdir -p "$DATA_DEST"
+    
+    # Copy plugin bundle
+    if [ -d "openfm.so" ]; then
+        cp -r openfm.so "$PLUGIN_DEST/"
+        echo -e "  ${GREEN}✓ Copied openfm.so to $PLUGIN_DEST${NC}"
+    elif [ -f "libopenfm.dylib" ]; then
+        cp libopenfm.dylib "$PLUGIN_DEST/openfm.so"
+        echo -e "  ${GREEN}✓ Copied libopenfm.dylib to $PLUGIN_DEST/openfm.so${NC}"
     fi
     
-    if [ ! -d "$OBS_PLUGIN_DIR" ]; then
-        echo -e "${RED}❌ OBS not found at: $OBS_PLUGIN_DIR${NC}"
-        echo -e "${YELLOW}Is OBS Studio installed?${NC}"
-        exit 1
+    # Copy data files if they exist
+    if [ -d "../data" ]; then
+        cp -r ../data/* "$DATA_DEST/"
+        echo -e "  ${GREEN}✓ Copied data files to $DATA_DEST${NC}"
     fi
     
-    sudo cp "$PLUGIN_SO" "$OBS_PLUGIN_DIR/"
-    echo -e "${GREEN}✅ Plugin installed to: $OBS_PLUGIN_DIR${NC}"
-    echo ""
+    echo -e "\n${GREEN}✓ Plugin installed successfully!${NC}"
+    echo -e "  ${YELLOW}Restart OBS Studio to load the plugin${NC}"
 fi
 
-# Summary
-echo "========================================"
-echo "Build Summary"
-echo "========================================"
-echo "Build Type: $BUILD_TYPE"
-echo "Plugin: build/openfm-obs.so"
+# Return to original directory
+cd ..
 
-if [ "$INSTALL_FLAG" = "--install" ]; then
-    echo -e "${GREEN}Status: Installed to OBS${NC}"
-    echo ""
-    echo -e "${YELLOW}Next steps:${NC}"
-    echo "1. Launch OBS Studio"
-    echo "2. Go to View → Docks → OpenFM"
-    echo "3. Make sure OpenFM service is running on port 6767"
-else
-    echo -e "${YELLOW}Status: Built (not installed)${NC}"
-    echo ""
-    echo "To install, run:"
-    echo "  ./build-macos.sh Release --install"
+echo -e "\n${GREEN}🎉 All done!${NC}"
+echo -e "\n${CYAN}Build location: $(pwd)/build/openfm.so${NC}"
+
+if [ "$INSTALL" = false ]; then
+    echo -e "\n${YELLOW}To install the plugin, run:${NC}"
+    echo -e "  ${NC}./build-macos.sh --install${NC}"
 fi
-
-echo ""
-echo "========================================"
-

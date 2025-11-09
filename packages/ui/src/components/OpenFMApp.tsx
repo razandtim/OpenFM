@@ -208,8 +208,6 @@ export function OpenFMApp({
             progress={state.progress}
             onTogglePlay={togglePlay}
             onNext={next}
-            onPrevious={previous}
-            queue={state.queue}
           />
 
           {/* Content based on mode */}

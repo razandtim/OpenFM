@@ -151,18 +151,19 @@ pnpm install
 # Build all packages
 pnpm build
 
-# Build service
-cd apps/service && pnpm build
-
 # Build desktop app
-cd apps/desktop && pnpm build
+pnpm --filter @openfm/desktop exec tauri build
 
-# Build OBS plugin (requires OBS dev files)
+# Build OBS plugin (Windows)
 cd apps/obs-plugin
-mkdir build && cd build
-cmake ..
-cmake --build . --config Release
+.\build-windows.ps1 -Install
+
+# Build OBS plugin (macOS)
+cd apps/obs-plugin
+./build-macos.sh --install
 ```
+
+**For detailed build instructions, see [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md)**
 
 ## Configuration
 

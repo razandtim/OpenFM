@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Volume2, Search, User } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Volume2, Search } from 'lucide-react';
 import './App.css';
 
 interface Track {
@@ -24,7 +24,7 @@ const MOODS: Array<{ id: MoodId; label: string; color: string; icon: string }> =
 function App() {
   const [currentMood, setCurrentMood] = useState<MoodId>('epic');
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState<Track>({
+  const [currentTrack] = useState<Track>({
     title: 'Carolina Jambala',
     artist: 'Romeo Fantastik',
     mood: 'EPIC',
@@ -33,7 +33,7 @@ function App() {
     artwork: undefined,
   });
   const [volume, setVolume] = useState(0.7);
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [showSidebar] = useState(true);
 
   // Connect to service WebSocket
   useEffect(() => {

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
+import { motion } from 'framer-motion';
 import clsx from 'clsx';
-import { PlayCircle, PauseCircle, SkipForward, SkipBack, X, List } from 'lucide-react';
+import { PlayCircle, PauseCircle, SkipForward } from 'lucide-react';
 import { getMoodConfig, formatDuration, type Track, type MoodId } from '@openfm/core';
 
 export interface NowPlayingProps {
@@ -14,8 +14,6 @@ export interface NowPlayingProps {
   progress: number;
   onTogglePlay: () => void;
   onNext: () => void;
-  onPrevious: () => void;
-  queue?: Track[];
   message?: string;
   className?: string;
 }
@@ -30,12 +28,9 @@ export function NowPlaying({
   progress,
   onTogglePlay,
   onNext,
-  onPrevious,
-  queue = [],
   message,
   className,
 }: NowPlayingProps) {
-  const [showQueue, setShowQueue] = useState(false);
   const mood = getMoodConfig(currentMood);
 
   if (!currentTrack) {
@@ -79,16 +74,6 @@ export function NowPlaying({
               {isLoading ? 'Buffering' : isPlaying ? 'Live' : 'Paused'}
             </span>
             
-            {queue.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setShowQueue(!showQueue)}
-                className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium transition hover:border-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                <List className="h-4 w-4" />
-                Queue ({queue.length})
-              </button>
-            )}
           </div>
         </div>
 
@@ -136,15 +121,6 @@ export function NowPlaying({
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={onPrevious}
-                className="flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white transition hover:border-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                aria-label="Previous track"
-              >
-                <SkipBack className="h-5 w-5" />
-              </button>
-
-              <button
-                type="button"
                 onClick={onTogglePlay}
                 disabled={isLoading}
                 className="flex flex-1 items-center justify-center rounded-xl border border-white/10 bg-white px-4 py-3 text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
@@ -170,47 +146,6 @@ export function NowPlaying({
         </div>
       </div>
 
-      {/* Queue Overlay */}
-      <AnimatePresence>
-        {showQueue && queue.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="absolute inset-x-6 top-full z-30 mt-4 max-h-96 overflow-y-auto rounded-3xl border border-white/10 bg-slate-950/95 p-6 shadow-2xl backdrop-blur-xl"
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Queue ({queue.length})</h3>
-              <button
-                type="button"
-                onClick={() => setShowQueue(false)}
-                className="rounded-lg p-1 text-white/60 transition hover:bg-white/10 hover:text-white"
-                aria-label="Close queue"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            
-            <div className="space-y-2">
-              {queue.slice(0, 20).map((track, index) => (
-                <div
-                  key={track.id}
-                  className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm"
-                >
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-xs font-semibold">
-                    {index + 1}
-                  </span>
-                  <div className="flex-1">
-                    <p className="font-semibold text-white">{track.title}</p>
-                    <p className="text-xs text-white/60">{track.artist}</p>
-                  </div>
-                  <span className="text-xs text-white/60">{formatDuration(track.duration)}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </section>
   );
 }

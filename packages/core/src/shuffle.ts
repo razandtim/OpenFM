@@ -22,6 +22,7 @@ export class BagShuffleQueue {
   private bag: Track[] = [];
   private allTracks: Track[];
   private loop: boolean;
+  private history: Track[] = [];
 
   constructor(tracks: Track[], loop = true) {
     this.allTracks = tracks;
@@ -38,7 +39,28 @@ export class BagShuffleQueue {
       if (!this.loop) return null;
       this.refillBag();
     }
-    return this.bag.shift() || null;
+    const track = this.bag.shift() || null;
+    if (track) {
+      this.history.push(track);
+      // Keep only last 100 tracks in history
+      if (this.history.length > 100) {
+        this.history.shift();
+      }
+    }
+    return track;
+  }
+
+  previous(): Track | null {
+    if (this.history.length === 0) return null;
+    // Remove current track from history and return the previous one
+    this.history.pop(); // Remove current
+    const previousTrack = this.history[this.history.length - 1];
+    if (previousTrack) {
+      // Put it back in the bag at the front
+      this.bag.unshift(previousTrack);
+      return previousTrack;
+    }
+    return null;
   }
 
   peek(count: number): Track[] {
@@ -78,6 +100,7 @@ export class BagShuffleQueue {
 export class RandomQueue {
   private allTracks: Track[];
   private loop: boolean;
+  private history: Track[] = [];
 
   constructor(tracks: Track[], loop = true) {
     this.allTracks = tracks;
@@ -87,7 +110,22 @@ export class RandomQueue {
   next(): Track | null {
     if (this.allTracks.length === 0) return null;
     const index = Math.floor(Math.random() * this.allTracks.length);
-    return this.allTracks[index];
+    const track = this.allTracks[index];
+    if (track) {
+      this.history.push(track);
+      // Keep only last 100 tracks in history
+      if (this.history.length > 100) {
+        this.history.shift();
+      }
+    }
+    return track;
+  }
+
+  previous(): Track | null {
+    if (this.history.length < 2) return null;
+    // Remove current track from history and return the previous one
+    this.history.pop(); // Remove current
+    return this.history[this.history.length - 1] || null;
   }
 
   peek(count: number): Track[] {

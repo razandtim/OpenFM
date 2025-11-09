@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import type { MoodId, Track, PlaybackState, PlayerSettings } from '@openfm/core';
 import { getDefaultSettings } from '@openfm/core';
 
@@ -59,6 +59,20 @@ export function PlayerProvider({
     ...getDefaultSettings(),
     ...initialSettings,
   });
+
+  // Sync state when initialState changes (for external state management)
+  useEffect(() => {
+    if (initialState) {
+      setState((prev) => ({ ...prev, ...initialState }));
+    }
+  }, [initialState]);
+
+  // Sync settings when initialSettings changes
+  useEffect(() => {
+    if (initialSettings) {
+      setSettings((prev) => ({ ...prev, ...initialSettings }));
+    }
+  }, [initialSettings]);
 
   const updateState = useCallback(
     (updates: Partial<PlaybackState>) => {
