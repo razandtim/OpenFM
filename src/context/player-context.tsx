@@ -26,12 +26,14 @@ type PlayerContextValue = {
   elapsed: number;
   duration: number;
   progress: number;
+  volume: number;
   setMood: (mood: MoodId) => void;
   play: () => Promise<void>;
   pause: () => void;
   togglePlay: () => Promise<void>;
   next: () => void;
   previous: () => void;
+  setVolume: (value: number) => void;
 };
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
@@ -50,6 +52,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(0);
   const [moodMessage, setMoodMessage] = useState(getMoodCopy("epic"));
+  const [volume, setVolume] = useState(1);
 
   const currentTrack = queue[activeIndex] ?? null;
 
@@ -70,6 +73,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   const play = useCallback(async () => {
     const audio = audioRef.current;
     if (!audio || !currentTrack) return;
+    audio.volume = volume;
     autoplayRef.current = true;
     try {
       await audio.play();
@@ -77,7 +81,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.warn("Playback failed", error);
     }
-  }, [currentTrack]);
+  }, [currentTrack, volume]);
 
   const pause = useCallback(() => {
     const audio = audioRef.current;
@@ -145,13 +149,21 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 
     const target = audio;
     target.src = currentTrack.audioSrc;
+    target.volume = volume;
     target.load();
     target.addEventListener("canplay", handleCanPlay);
 
     return () => {
       target.removeEventListener("canplay", handleCanPlay);
     };
-  }, [currentTrack]);
+  }, [currentTrack, volume]);
+
+  // keep DOM audio volume in sync when slider changes
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = volume;
+  }, [volume]);
 
   useEffect(() => {
     const node = audioRef.current;
@@ -178,12 +190,14 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     elapsed,
     duration,
     progress: duration ? elapsed / duration : 0,
+    volume,
     setMood: syncMood,
     play,
     pause,
     togglePlay,
     next,
     previous,
+    setVolume,
   };
 
   return (
