@@ -1,13 +1,14 @@
 import React, { useState, useCallback } from 'react';
 import ReactDOM from 'react-dom/client';
-import { OpenFMApp } from '@openfm/ui';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { LandingPage, OpenFMApp } from '@openfm/ui';
 // Import styles - relative to Vite root (src/ui)
 import '../../../../packages/ui/src/styles.css';
 import { ServicePlayerProvider } from './ServicePlayerProvider';
 
 const API_BASE = 'http://127.0.0.1:6767/api';
 
-function App() {
+function PlayerPage() {
   const [sunoApiKey, setSunoApiKey] = useState<string>('');
   const [libraryRoot, setLibraryRoot] = useState<string>('');
   const [enabledMoods, setEnabledMoods] = useState<Set<string>>(new Set());
@@ -134,6 +135,18 @@ function App() {
         enabledMoods={enabledMoods as Set<'epic' | 'romantic' | 'funny' | 'scary' | 'sad'>}
       />
     </ServicePlayerProvider>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/player" element={<PlayerPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

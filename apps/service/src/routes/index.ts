@@ -310,6 +310,45 @@ export function setupRoutes(
     res.json({ tracks: [] });
   });
 
+  // Search endpoint
+  app.get('/api/search', async (req, res) => {
+    try {
+      const { q } = req.query;
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({ error: 'Query parameter "q" is required' });
+      }
+
+      const query = q.toLowerCase();
+      const library = stateManager.getLibrary();
+      
+      // Search local mood tracks
+      const moodTracks: Array<{ id: string; title: string; mood: string }> = [];
+      library.forEach((mood) => {
+        mood.tracks.forEach((track) => {
+          if (track.title.toLowerCase().includes(query) || 
+              track.artist.toLowerCase().includes(query)) {
+            moodTracks.push({
+              id: track.id,
+              title: track.title,
+              mood: mood.id,
+            });
+          }
+        });
+      });
+
+      // TODO: Search Suno tracks if API key is available
+      const sunoTracks: any[] = [];
+
+      res.json({
+        sunoTracks,
+        moodTracks,
+      });
+    } catch (error) {
+      console.error('Search error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   // Auth endpoints
   app.post('/api/auth/signin', async (req, res) => {
     // TODO: Implement auth

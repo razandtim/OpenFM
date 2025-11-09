@@ -105,30 +105,45 @@ export function useAudioPlayer(state: PlaybackState, onNext: () => void) {
       audioRef.current.src = ''; // Clear src first
       currentTrackIdRef.current = undefined; // Reset track ID
       
-      // Wait for audio to be ready, then auto-play
+      // Wait for audio to be ready, then auto-play if state says we should be playing
       const playWhenReady = () => {
-        console.log('Audio can play, clearing loading and starting playback');
+        console.log('Audio can play, clearing loading and checking if we should auto-play');
         // Clear loading state immediately when audio can play
+        const duration = audioRef.current?.duration || 0;
         fetch(`${API_BASE}/playback/progress`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             elapsed: 0, 
-            duration: audioRef.current?.duration || 0,
+            duration,
             clearLoading: true 
           }),
         }).catch(() => {});
         
-        // Auto-play when ready (mood changes should auto-play)
-        // But only if user has interacted (to avoid autoplay restrictions)
-        if (audioRef.current) {
-          // Try to play, but don't fail if autoplay is blocked
-          audioRef.current.play().catch((err) => {
-            // Autoplay was blocked - this is expected and OK
-            // The user can click play manually
-            console.log('Autoplay blocked (expected):', err.message);
+        // Check current playback state - only auto-play if state.isPlaying is true
+        fetch(`${API_BASE}/state`)
+          .then(res => res.json())
+          .then(stateData => {
+            if (audioRef.current && stateData.isPlaying) {
+              console.log('State says we should be playing, attempting auto-play');
+              audioRef.current.play()
+                .then(() => {
+                  console.log('Auto-play successful');
+                })
+                .catch((err) => {
+                  // Autoplay was blocked - this is expected and OK
+                  // The user can click play manually
+                  console.log('Autoplay blocked (expected):', err.message);
+                  // Update state to reflect we're not playing
+                  fetch(`${API_BASE}/playback/pause`, { method: 'POST' }).catch(() => {});
+                });
+            } else {
+              console.log('State says we should not be playing, skipping auto-play');
+            }
+          })
+          .catch(err => {
+            console.error('Error fetching state for auto-play check:', err);
           });
-        }
       };
       
       // Small delay to ensure audio element is ready, then set src and add listeners
@@ -159,18 +174,30 @@ export function useAudioPlayer(state: PlaybackState, onNext: () => void) {
       // Also clear loading after a timeout as fallback (3 seconds)
       const fallbackTimeoutId = setTimeout(() => {
         console.log('Timeout: clearing loading state');
+        const duration = audioRef.current?.duration || 0;
         fetch(`${API_BASE}/playback/progress`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             elapsed: 0, 
-            duration: audioRef.current?.duration || 0,
+            duration,
             clearLoading: true 
           }),
         }).catch(() => {});
-        // Try to play even if timeout
+        // Try to play even if timeout, but only if state says we should be playing
         if (audioRef.current && audioRef.current.readyState >= 2) {
-          audioRef.current.play().catch(() => {});
+          fetch(`${API_BASE}/state`)
+            .then(res => res.json())
+            .then(stateData => {
+              if (audioRef.current && stateData.isPlaying) {
+                audioRef.current.play()
+                  .then(() => {
+                    console.log('Fallback timeout play successful');
+                  })
+                  .catch(() => {});
+              }
+            })
+            .catch(() => {});
         }
       }, 3000);
       
@@ -180,25 +207,39 @@ export function useAudioPlayer(state: PlaybackState, onNext: () => void) {
         clearTimeout(fallbackTimeoutId);
       };
     }
-  }, [state.currentTrack?.id, state.isPlaying]);
+  }, [state.currentTrack?.id]);
 
   // Handle play/pause
   useEffect(() => {
-    if (!audioRef.current || !state.currentTrack) return;
+    if (!audioRef.current) return;
     
-    // Only handle play/pause if we're on the correct track
-    if (currentTrackIdRef.current === state.currentTrack.id) {
-      if (state.isPlaying) {
+    // Only handle play/pause if we have a track loaded AND the audio src is set
+    if (state.currentTrack && currentTrackIdRef.current === state.currentTrack.id && audioRef.current.src) {
+      if (state.isPlaying && !audioRef.current.paused) {
+        // Already playing, do nothing
+        return;
+      }
+      
+      if (state.isPlaying && audioRef.current.paused) {
         console.log('Playing audio:', state.currentTrack.title);
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((err) => {
-            console.error('Error playing audio:', err);
-            // If play fails, update state to reflect that
-            fetch(`${API_BASE}/playback/pause`, { method: 'POST' }).catch(() => {});
-          });
+        // Only try to play if the audio is ready
+        if (audioRef.current.readyState >= 2) {
+          const playPromise = audioRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                console.log('Audio playback started');
+              })
+              .catch((err) => {
+                console.error('Error playing audio:', err);
+                // If play fails, update state to reflect that
+                fetch(`${API_BASE}/playback/pause`, { method: 'POST' }).catch(() => {});
+              });
+          }
+        } else {
+          console.log('Audio not ready yet, waiting for canplay event');
         }
-      } else {
+      } else if (!state.isPlaying && !audioRef.current.paused) {
         console.log('Pausing audio');
         audioRef.current.pause();
       }
@@ -220,22 +261,34 @@ export function useAudioPlayer(state: PlaybackState, onNext: () => void) {
   }, [state.isMuted]);
 
   // Update progress from audio element
+  // Note: Progress updates are kept local for smooth UI, not sent to API every 500ms
+  // Only send duration updates when metadata loads
   useEffect(() => {
-    if (!audioRef.current || !state.isPlaying) return;
+    if (!audioRef.current) return;
 
-    const interval = setInterval(() => {
+    // Send duration update when metadata loads
+    const handleMetadata = () => {
       if (audioRef.current) {
-        const elapsed = audioRef.current.currentTime || 0;
-        const duration = audioRef.current.duration || state.duration;
-        
-        // Progress is updated via WebSocket/API, but we can sync here if needed
-        if (Math.abs(elapsed - state.elapsed) > 0.5) {
-          // Significant drift - could sync, but let service handle it
-        }
+        const duration = audioRef.current.duration || 0;
+        // Only send duration to API, not elapsed time
+        fetch(`${API_BASE}/playback/progress`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            elapsed: 0, 
+            duration,
+          }),
+        }).catch(() => {});
       }
-    }, 100);
+    };
+    
+    audioRef.current.addEventListener('loadedmetadata', handleMetadata);
 
-    return () => clearInterval(interval);
-  }, [state.isPlaying, state.duration, state.elapsed]);
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.removeEventListener('loadedmetadata', handleMetadata);
+      }
+    };
+  }, [state.currentTrack?.id]);
 }
 

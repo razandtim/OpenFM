@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import clsx from 'clsx';
-import { Header } from './Header';
+import { Settings as SettingsIcon } from 'lucide-react';
+import { Sidebar } from './Sidebar';
 import { MoodSelector } from './MoodSelector';
 import { NowPlaying } from './NowPlaying';
-import { Controls } from './Controls';
 import { SunoGrid } from './SunoGrid';
+import { SearchBar } from './SearchBar';
 import { Auth } from './Auth';
 import { Settings } from './Settings';
 import { usePlayer } from '../context/PlayerContext';
+import { MOOD_BACKGROUNDS, getMoodConfig } from '@openfm/core';
 import type { MoodId, SunoTrack } from '@openfm/core';
 
 export interface OpenFMAppProps {
@@ -68,6 +70,11 @@ export function OpenFMApp({
   const [showAuth, setShowAuth] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [authError, setAuthError] = useState<string>();
+  const [searchResults, setSearchResults] = useState<{
+    sunoTracks?: SunoTrack[];
+    moodTracks?: Array<{ id: string; title: string; mood: MoodId }>;
+  }>();
+  const [isSearching, setIsSearching] = useState(false);
 
   const handleSignIn = async (email: string, password: string) => {
     try {
@@ -108,48 +115,93 @@ export function OpenFMApp({
   };
 
   const isDockMode = mode === 'dock';
+  
+  // Get background based on current mood
+  const currentMood = state.currentMood || 'epic';
+  const moodConfig = getMoodConfig(currentMood);
+  const backgroundStyle = {
+    background: MOOD_BACKGROUNDS[currentMood],
+  };
 
   return (
     <div
       className={clsx(
-        'relative flex min-h-screen flex-col text-white',
-        isDockMode ? 'h-full' : 'min-h-screen',
+        'relative flex h-screen flex-col text-white transition-colors duration-500 overflow-hidden',
         className
       )}
+      style={backgroundStyle}
     >
-      {/* Background */}
-      <div className="bg-grid absolute inset-0" aria-hidden />
+      {/* Background Grid Overlay */}
+      <div className="bg-grid absolute inset-0 opacity-30" aria-hidden />
       
       {/* Content */}
-      <div className="relative z-10 flex flex-col">
-        <Header
-          status={getHeaderStatus()}
+      <div className="relative z-10 flex h-full overflow-hidden">
+        {/* Sidebar */}
+        <Sidebar
           onAuthClick={() => setShowAuth(!showAuth)}
-          onSettingsClick={() => setShowSettings(!showSettings)}
+          onSignIn={() => setShowAuth(true)}
+          onSignUp={() => setShowAuth(true)}
           isAuthenticated={isAuthenticated}
-          userEmail={userEmail}
         />
-
-        {/* Modals */}
-        {showAuth && onSignIn && onSignUp && onSignOut && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
-            <div className="w-full max-w-md">
-              <Auth
-                isSignedIn={!!isAuthenticated}
-                userEmail={userEmail}
-                onSignIn={handleSignIn}
-                onSignUp={handleSignUp}
-                onSignOut={handleSignOut}
-                onClose={() => setShowAuth(false)}
-                error={authError}
-              />
-            </div>
+        
+        {/* Main Content Area */}
+        <div className="flex flex-1 flex-col h-screen">
+          {/* Top Bar with Search and Player Controls */}
+          <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-6 py-4">
+            <SearchBar
+              onSearch={async (query) => {
+                setIsSearching(true);
+                try {
+                  const response = await fetch(`http://127.0.0.1:6767/api/search?q=${encodeURIComponent(query)}`);
+                  if (response.ok) {
+                    const data = await response.json();
+                    setSearchResults({
+                      sunoTracks: data.sunoTracks || [],
+                      moodTracks: data.moodTracks || [],
+                    });
+                  }
+                } catch (error) {
+                  console.error('Search error:', error);
+                } finally {
+                  setIsSearching(false);
+                }
+              }}
+              searchResults={searchResults}
+              isLoading={isSearching}
+              className="flex-1 max-w-md"
+            />
+            
+            {/* Settings Button */}
+            <button
+              type="button"
+              onClick={() => setShowSettings(true)}
+              className="ml-4 flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white transition hover:border-white/30 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              aria-label="Settings"
+            >
+              <SettingsIcon className="h-5 w-5" />
+            </button>
           </div>
-        )}
 
-        {showSettings && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
-            <div className="h-full w-full max-w-2xl">
+          {/* Modals */}
+          {showAuth && onSignIn && onSignUp && onSignOut && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
+              <div className="w-full max-w-md">
+                <Auth
+                  isSignedIn={!!isAuthenticated}
+                  userEmail={userEmail}
+                  onSignIn={handleSignIn}
+                  onSignUp={handleSignUp}
+                  onSignOut={handleSignOut}
+                  onClose={() => setShowAuth(false)}
+                  error={authError}
+                />
+              </div>
+            </div>
+          )}
+
+          {showSettings && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
+              <div className="h-full w-full max-w-2xl">
               <Settings
                 settings={settings}
                 onSettingsChange={updateSettings}
@@ -162,41 +214,17 @@ export function OpenFMApp({
                 audioPriorityOverrides={audioPriorityOverrides}
                 onAudioPriorityChange={onAudioPriorityChange}
                 availableOBSSources={availableOBSSources}
+                volume={state.volume}
+                onVolumeChange={setVolume}
+                crossfadeDuration={state.crossfadeDuration}
+                onCrossfadeChange={setCrossfade}
               />
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Main Content */}
-        <div className="flex-1 space-y-6 p-6">
-          {/* Tab Switcher */}
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setMode('local')}
-              className={clsx(
-                'rounded-lg px-4 py-2 text-sm font-medium transition',
-                state.mode === 'local'
-                  ? 'bg-accent text-white'
-                  : 'bg-white/10 text-white hover:bg-white/20'
-              )}
-            >
-              Local Moods
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('suno')}
-              className={clsx(
-                'rounded-lg px-4 py-2 text-sm font-medium transition',
-                state.mode === 'suno'
-                  ? 'bg-accent text-white'
-                  : 'bg-white/10 text-white hover:bg-white/20'
-              )}
-            >
-              Suno Library
-            </button>
-          </div>
-
+          {/* Main Content */}
+          <div className="flex-1 space-y-6 p-6 overflow-y-auto">
           {/* Now Playing */}
           <NowPlaying
             currentTrack={state.currentTrack}
@@ -210,39 +238,18 @@ export function OpenFMApp({
             onNext={next}
           />
 
-          {/* Content based on mode */}
-          {state.mode === 'local' ? (
-            <MoodSelector
-              currentMood={state.currentMood || 'epic'}
-              onMoodSelect={setMood}
-              enabledMoods={enabledMoods}
-              isLoading={state.isLoading}
-              isPlaying={state.isPlaying}
-            />
-          ) : (
-            <SunoGrid
-              tracks={sunoTracks}
-              currentTrackId={state.currentTrack?.id}
-              onTrackSelect={onSunoTrackSelect || (() => {})}
-              playbackMode={settings.playbackMode}
-              onPlaybackModeChange={(mode) => updateSettings({ playbackMode: mode })}
-              loop={settings.loop}
-              onLoopToggle={() => updateSettings({ loop: !settings.loop })}
-              isLoading={isSunoLoading}
-            />
-          )}
-
-          {/* Controls */}
-          <Controls
-            crossfadeDuration={state.crossfadeDuration}
-            onCrossfadeChange={setCrossfade}
-            isMuted={state.isMuted}
-            onMuteToggle={toggleMute}
-            showOverlay={settings.showOverlay}
-            onOverlayToggle={() => updateSettings({ showOverlay: !settings.showOverlay })}
-            volume={state.volume}
-            onVolumeChange={setVolume}
+          {/* Mood Selector - Always show for local mode */}
+          <MoodSelector
+            currentMood={state.currentMood || 'epic'}
+            onMoodSelect={(mood) => {
+              console.log('Mood selected:', mood);
+              setMood(mood);
+            }}
+            enabledMoods={enabledMoods}
+            isLoading={state.isLoading}
+            isPlaying={state.isPlaying}
           />
+        </div>
         </div>
       </div>
     </div>

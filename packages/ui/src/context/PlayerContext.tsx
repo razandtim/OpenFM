@@ -63,9 +63,30 @@ export function PlayerProvider({
   // Sync state when initialState changes (for external state management)
   useEffect(() => {
     if (initialState) {
-      setState((prev) => ({ ...prev, ...initialState }));
+      setState((prev) => {
+        // Only update if there are actual changes to avoid unnecessary re-renders
+        const hasChanges = 
+          prev.currentMood !== initialState.currentMood ||
+          prev.isPlaying !== initialState.isPlaying ||
+          prev.isLoading !== initialState.isLoading ||
+          prev.currentTrack?.id !== initialState.currentTrack?.id ||
+          prev.volume !== initialState.volume ||
+          prev.crossfadeDuration !== initialState.crossfadeDuration;
+        
+        if (hasChanges) {
+          return { ...prev, ...initialState };
+        }
+        return prev;
+      });
     }
-  }, [initialState]);
+  }, [
+    initialState?.currentMood,
+    initialState?.isPlaying,
+    initialState?.isLoading,
+    initialState?.currentTrack?.id,
+    initialState?.volume,
+    initialState?.crossfadeDuration,
+  ]);
 
   // Sync settings when initialSettings changes
   useEffect(() => {

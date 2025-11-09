@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 
 const SERVICE_ORIGIN = 'http://127.0.0.1:6767';
-const UI_URL = `${SERVICE_ORIGIN}/ui`;
+const UI_URL = `${SERVICE_ORIGIN}/player`;
 const HEALTH_URL = `${SERVICE_ORIGIN}/health`;
 
 type ServiceStatus = 'checking' | 'ready' | 'error';

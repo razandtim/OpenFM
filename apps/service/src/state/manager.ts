@@ -170,9 +170,21 @@ export class StateManager extends EventEmitter {
     this.savePreferencesSync();
   }
 
+  private lastProgressBroadcast = 0;
+  private progressBroadcastThrottleMs = 2000; // Only broadcast progress every 2 seconds
+
   updateProgress(elapsed: number, duration: number): void {
     const progress = duration > 0 ? elapsed / duration : 0;
-    this.updateState({ elapsed, duration, progress });
+    // Update state internally
+    this.state = { ...this.state, elapsed, duration, progress };
+    
+    // Throttle WebSocket broadcasts for progress updates to avoid flooding
+    const now = Date.now();
+    if (now - this.lastProgressBroadcast >= this.progressBroadcastThrottleMs) {
+      this.lastProgressBroadcast = now;
+      this.emit('state:changed', this.state);
+    }
+    // Note: State is always updated, but WebSocket broadcasts are throttled
   }
 
   // Mode switching

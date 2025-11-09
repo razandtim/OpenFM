@@ -42,6 +42,16 @@ Source: "..\..\apps\desktop\src-tauri\target\release\*.dll"; DestDir: "{app}"; F
 ; OBS Plugin
 Source: "..\..\apps\obs-plugin\build\Release\openfm.dll"; DestDir: "{code:GetOBSPluginDir}"; Flags: ignoreversion; Check: CheckOBSInstalled
 
+; OBS Plugin Qt Dependencies (copy from OBS installation if available)
+; Note: These will be copied from OBS's bin directory to ensure version compatibility
+Source: "{code:GetOBSBinDir}\Qt6Core.dll"; DestDir: "{code:GetOBSPluginDir}"; Flags: ignoreversion external; Check: CheckOBSInstalled and FileExists(ExpandConstant('{code:GetOBSBinDir}\Qt6Core.dll'))
+Source: "{code:GetOBSBinDir}\Qt6Widgets.dll"; DestDir: "{code:GetOBSPluginDir}"; Flags: ignoreversion external; Check: CheckOBSInstalled and FileExists(ExpandConstant('{code:GetOBSBinDir}\Qt6Widgets.dll'))
+Source: "{code:GetOBSBinDir}\Qt6WebEngineWidgets.dll"; DestDir: "{code:GetOBSPluginDir}"; Flags: ignoreversion external; Check: CheckOBSInstalled and FileExists(ExpandConstant('{code:GetOBSBinDir}\Qt6WebEngineWidgets.dll'))
+Source: "{code:GetOBSBinDir}\Qt6WebEngineCore.dll"; DestDir: "{code:GetOBSPluginDir}"; Flags: ignoreversion external; Check: CheckOBSInstalled and FileExists(ExpandConstant('{code:GetOBSBinDir}\Qt6WebEngineCore.dll'))
+Source: "{code:GetOBSBinDir}\Qt6WebChannel.dll"; DestDir: "{code:GetOBSPluginDir}"; Flags: ignoreversion external; Check: CheckOBSInstalled and FileExists(ExpandConstant('{code:GetOBSBinDir}\Qt6WebChannel.dll'))
+Source: "{code:GetOBSBinDir}\Qt6Network.dll"; DestDir: "{code:GetOBSPluginDir}"; Flags: ignoreversion external; Check: CheckOBSInstalled and FileExists(ExpandConstant('{code:GetOBSBinDir}\Qt6Network.dll'))
+Source: "{code:GetOBSBinDir}\Qt6Gui.dll"; DestDir: "{code:GetOBSPluginDir}"; Flags: ignoreversion external; Check: CheckOBSInstalled and FileExists(ExpandConstant('{code:GetOBSBinDir}\Qt6Gui.dll'))
+
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
 Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
@@ -62,6 +72,18 @@ begin
     Result := OBSPath + '\obs-plugins\64bit'
   else
     Result := ExpandConstant('{commonpf}\obs-studio\obs-plugins\64bit');
+end;
+
+function GetOBSBinDir(Param: String): String;
+var
+  OBSPath: String;
+begin
+  if RegQueryStringValue(HKLM, 'SOFTWARE\OBS Studio', 'InstallPath', OBSPath) then
+    Result := OBSPath + '\bin\64bit'
+  else if RegQueryStringValue(HKCU, 'SOFTWARE\OBS Studio', 'InstallPath', OBSPath) then
+    Result := OBSPath + '\bin\64bit'
+  else
+    Result := ExpandConstant('{commonpf}\obs-studio\bin\64bit');
 end;
 
 function CheckOBSInstalled(): Boolean;

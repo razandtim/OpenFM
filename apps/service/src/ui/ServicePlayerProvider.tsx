@@ -33,6 +33,7 @@ export function ServicePlayerProvider({ children }: ServicePlayerProviderProps) 
             if (data.type === 'state' && data.state) {
               // Log state updates for debugging
               console.log('WebSocket state update:', {
+                currentMood: data.state.currentMood,
                 currentTrack: data.state.currentTrack?.title,
                 isLoading: data.state.isLoading,
                 isPlaying: data.state.isPlaying,
@@ -213,6 +214,56 @@ function APIConnectedWrapper({
 }) {
   const player = usePlayer();
   
+  // Track progress locally from audio element for smooth UI updates
+  React.useEffect(() => {
+    // Find the audio element and track its progress
+    const audioElements = document.getElementsByTagName('audio');
+    if (audioElements.length === 0) return;
+    
+    const audio = audioElements[0];
+    let lastUpdateTime = 0;
+    const updateThrottleMs = 100; // Update UI every 100ms (10 times per second)
+    let animationFrameId: number;
+    
+    const updateProgress = () => {
+      if (audio && player.state.currentTrack) {
+        const now = Date.now();
+        
+        // Throttle updates to avoid too many state changes
+        if (now - lastUpdateTime >= updateThrottleMs) {
+          lastUpdateTime = now;
+          
+          const elapsed = audio.currentTime || 0;
+          const duration = audio.duration || 0;
+          const progress = duration > 0 ? elapsed / duration : 0;
+          
+          // Only update if values actually changed
+          if (
+            Math.abs(elapsed - player.state.elapsed) > 0.05 ||
+            Math.abs(duration - player.state.duration) > 0.05
+          ) {
+            // Update local state directly without calling API
+            player.onStateChange?.({ 
+              ...player.state, 
+              elapsed, 
+              duration, 
+              progress 
+            });
+          }
+        }
+      }
+      animationFrameId = requestAnimationFrame(updateProgress);
+    };
+    
+    animationFrameId = requestAnimationFrame(updateProgress);
+    
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [player.state.currentTrack?.id, player.onStateChange]);
+  
   // Handle audio playback in the browser
   useAudioPlayer(player.state, player.next);
 
@@ -230,66 +281,77 @@ function APIConnectedWrapper({
   // Create API-connected versions
   React.useEffect(() => {
     // Replace actions with API calls
+    // IMPORTANT: Only call the API, don't call original functions
+    // Let WebSocket sync the state back to avoid race conditions
     (player as any).setMood = async (mood: MoodId) => {
+      console.log('Mood selected:', mood);
       await apiCall('/playback/mood', {
         method: 'POST',
         body: JSON.stringify({ mood }),
       });
-      originalSetMood(mood);
+      // Don't call originalSetMood - let WebSocket update state
     };
 
     (player as any).togglePlay = async () => {
+      console.log('Toggle play clicked');
       await apiCall('/playback/toggle', { method: 'POST' });
-      originalTogglePlay();
+      // Don't call originalTogglePlay - let WebSocket update state
     };
 
     (player as any).next = async () => {
+      console.log('Next track clicked');
       await apiCall('/playback/next', { method: 'POST' });
-      originalNext();
+      // Don't call originalNext - let WebSocket update state
     };
 
     (player as any).previous = async () => {
+      console.log('Previous track clicked');
       await apiCall('/playback/previous', { method: 'POST' });
-      originalPrevious();
+      // Don't call originalPrevious - let WebSocket update state
     };
 
     (player as any).setMode = async (mode: 'local' | 'suno') => {
+      console.log('Mode changed to:', mode);
       await apiCall('/playback/mode', {
         method: 'POST',
         body: JSON.stringify({ mode }),
       });
-      originalSetMode(mode);
+      // Don't call originalSetMode - let WebSocket update state
     };
 
     (player as any).toggleMute = async () => {
+      console.log('Toggle mute clicked');
       await apiCall('/playback/mute', { method: 'POST' });
-      originalToggleMute();
+      // Don't call originalToggleMute - let WebSocket update state
     };
 
     (player as any).setCrossfade = async (duration: number) => {
-      await apiCall('/settings/crossfade', {
+      console.log('Crossfade changed to:', duration);
+      await apiCall('/settings', {
         method: 'POST',
-        body: JSON.stringify({ duration }),
+        body: JSON.stringify({ crossfadeDuration: duration }),
       });
-      originalSetCrossfade(duration);
+      // Don't call originalSetCrossfade - let WebSocket update state
     };
 
     (player as any).setVolume = async (volume: number) => {
+      // Volume can be updated locally for instant feedback
+      originalSetVolume(volume);
       await apiCall('/playback/volume', {
         method: 'POST',
         body: JSON.stringify({ volume }),
       });
-      originalSetVolume(volume);
     };
 
     (player as any).updateSettings = async (newSettings: Partial<PlayerSettings>) => {
+      console.log('Settings updated:', newSettings);
       await apiCall('/settings', {
         method: 'POST',
         body: JSON.stringify(newSettings),
       });
-      originalUpdateSettings(newSettings);
+      // Don't call originalUpdateSettings - let WebSocket update state
     };
-  }, [player, apiCall, originalSetMood, originalTogglePlay, originalNext, originalPrevious, originalSetMode, originalToggleMute, originalSetCrossfade, originalSetVolume, originalUpdateSettings]);
+  }, [player, apiCall, originalSetVolume]);
 
   return <>{children}</>;
 }

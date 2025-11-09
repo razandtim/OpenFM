@@ -3,18 +3,27 @@
 import type { MoodConfig, MoodId } from './types';
 
 export const MOOD_COLORS = {
-  epic: '#FF6B6B',
-  romantic: '#FFC6E7',
-  funny: '#FFE08A',
-  scary: '#B28DFF',
-  sad: '#7EC8E3',
+  epic: '#4A5568', // Dark blue/purple from screenshot
+  romantic: '#8B7355', // Warm brown from screenshot
+  funny: '#2DD4BF', // Teal/turquoise from screenshot
+  scary: '#9B2C2C', // Dark red from screenshot
+  sad: '#63B3ED', // Light blue from screenshot
+} as const;
+
+// Background gradient colors for each mood
+export const MOOD_BACKGROUNDS = {
+  epic: 'linear-gradient(135deg, #2D3748 0%, #4A5568 50%, #1A202C 100%)', // Dark blue/purple gradient
+  romantic: 'linear-gradient(135deg, #A68B5B 0%, #8B7355 50%, #6B5B4A 100%)', // Warm brown gradient
+  funny: 'linear-gradient(135deg, #14B8A6 0%, #2DD4BF 50%, #0D9488 100%)', // Teal/turquoise gradient
+  scary: 'linear-gradient(135deg, #7F1D1D 0%, #9B2C2C 50%, #63171B 100%)', // Dark red gradient
+  sad: 'linear-gradient(135deg, #4299E1 0%, #63B3ED 50%, #3182CE 100%)', // Light blue gradient
 } as const;
 
 export const MOOD_CONFIG: Record<MoodId, MoodConfig> = {
   epic: {
     id: 'epic',
     label: 'Epic',
-    tagline: 'Heroic anthems & soaring crescendos',
+    tagline: 'Arena-scale crescendos, stream-safe.',
     icon: '⚔️',
     color: MOOD_COLORS.epic,
     accentMuted: `${MOOD_COLORS.epic}33`,
@@ -23,7 +32,7 @@ export const MOOD_CONFIG: Record<MoodId, MoodConfig> = {
   romantic: {
     id: 'romantic',
     label: 'Romantic',
-    tagline: 'Tender moments & heartfelt melodies',
+    tagline: 'Slow-bloom textures wrapped in neon dusk.',
     icon: '💕',
     color: MOOD_COLORS.romantic,
     accentMuted: `${MOOD_COLORS.romantic}33`,
@@ -32,7 +41,7 @@ export const MOOD_CONFIG: Record<MoodId, MoodConfig> = {
   funny: {
     id: 'funny',
     label: 'Funny',
-    tagline: 'Quirky tunes & playful beats',
+    tagline: 'Bouncy chip-pop and curious percussion.',
     icon: '😄',
     color: MOOD_COLORS.funny,
     accentMuted: `${MOOD_COLORS.funny}33`,
@@ -41,7 +50,7 @@ export const MOOD_CONFIG: Record<MoodId, MoodConfig> = {
   scary: {
     id: 'scary',
     label: 'Scary',
-    tagline: 'Eerie atmospheres & suspenseful strings',
+    tagline: 'Dark ambience with pulse-raising drones.',
     icon: '👻',
     color: MOOD_COLORS.scary,
     accentMuted: `${MOOD_COLORS.scary}33`,
@@ -50,7 +59,7 @@ export const MOOD_CONFIG: Record<MoodId, MoodConfig> = {
   sad: {
     id: 'sad',
     label: 'Sad',
-    tagline: 'Melancholic echoes & bittersweet ballads',
+    tagline: 'Gentle downtempo reflections for late nights.',
     icon: '😢',
     color: MOOD_COLORS.sad,
     accentMuted: `${MOOD_COLORS.sad}33`,

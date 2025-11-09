@@ -19,16 +19,24 @@ export class PlaybackManager {
   private setupEventListeners(): void {
     this.stateManager.on('playback:mood-changed', (mood: MoodId) => {
       console.log(`Mood changed to: ${mood}`);
-      // Stop current playback first
-      this.stateManager.pause();
-      // Clear current track and queue to force reload
-      this.stateManager.updateState({ currentTrack: undefined, queue: [] });
-      this.queue = null; // Clear queue
-      // Load new mood
-      this.loadMood(mood).catch((err) => {
-        console.error('Error loading mood:', err);
-        this.stateManager.updateState({ isLoading: false });
+      // Remember if we were playing before mood change
+      const wasPlaying = this.stateManager.getState().isPlaying;
+      
+      // Clear current track and queue to force reload, but keep isPlaying state
+      this.stateManager.updateState({ 
+        currentTrack: undefined, 
+        queue: [],
+        isLoading: true,
+        // Keep isPlaying state so new track will auto-play if we were playing
       });
+      this.queue = null; // Clear queue
+      
+      // Load new mood
+      this.loadMood(mood, wasPlaying)
+        .catch((err) => {
+          console.error('Error loading mood:', err);
+          this.stateManager.updateState({ isLoading: false, isPlaying: false });
+        });
     });
 
     this.stateManager.on('playback:play', () => {
@@ -63,7 +71,7 @@ export class PlaybackManager {
     });
   }
 
-  private async loadMood(mood: MoodId): Promise<void> {
+  private async loadMood(mood: MoodId, shouldAutoPlay: boolean = false): Promise<void> {
     let library = this.stateManager.getLibrary();
     
     // If library is empty, try to load from saved preferences
@@ -72,7 +80,7 @@ export class PlaybackManager {
       // The library should have been scanned on startup or via the UI
       // For now, just log a warning
       console.warn('Library is empty. Please scan the library first via Settings > Library > Rescan');
-      this.stateManager.updateState({ isLoading: false });
+      this.stateManager.updateState({ isLoading: false, isPlaying: false });
       return;
     }
     
@@ -80,16 +88,20 @@ export class PlaybackManager {
 
     if (!moodData || moodData.tracks.length === 0) {
       console.warn(`No tracks found for mood: ${mood}. Library has ${library.length} moods.`);
-      this.stateManager.updateState({ isLoading: false });
+      this.stateManager.updateState({ isLoading: false, isPlaying: false });
       return;
     }
 
-    console.log(`Loading mood ${mood} with ${moodData.tracks.length} tracks`);
+    console.log(`Loading mood ${mood} with ${moodData.tracks.length} tracks (autoPlay: ${shouldAutoPlay})`);
 
     const settings = this.stateManager.getSettings();
     this.queue = createQueue(moodData.tracks, settings.playbackMode, settings.loop);
 
     // Immediately play next track (this will set the track and trigger audio loading)
+    // If we should auto-play, set isPlaying to true so the new track starts playing when ready
+    if (shouldAutoPlay) {
+      this.stateManager.updateState({ isPlaying: true });
+    }
     this.playNext();
   }
 
@@ -141,11 +153,18 @@ export class PlaybackManager {
     // Update state - actual audio playback happens in the browser
     // The browser will listen to state changes and play audio via HTMLAudioElement
     // Set track and loading state - the audio player will clear loading when ready
+    const currentState = this.stateManager.getState();
+    
+    // Set the new track with loading state, preserving the current isPlaying state
     this.stateManager.setTrack(track);
-    this.stateManager.updateState({ isLoading: true, isPlaying: false });
+    this.stateManager.updateState({ 
+      isLoading: true,
+      // Keep the current isPlaying state - if it's true, the audio will auto-play when ready
+      isPlaying: currentState.isPlaying,
+    });
 
     // Auto-play will be handled by the audio player when it's ready
-    // Don't set isPlaying here - let the audio player do it when canplay fires
+    // The audio player will try to play when canplay fires
   }
 
   private resumePlayback(): void {

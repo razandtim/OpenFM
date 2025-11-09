@@ -61,20 +61,25 @@ export function NowPlaying({
       <div className="relative z-10 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex-1">
+          <div className="flex items-center gap-2">
             <p className="text-xs uppercase tracking-[0.35em] text-white/50">
-              Now Playing • {mood.icon} {mood.label}
+              NOW PLAYING
             </p>
-            <h2 className="mt-2 text-2xl font-bold">{currentTrack.title}</h2>
-            <p className="text-white/70">{currentTrack.artist}</p>
+            <span className="text-xs text-white/50">•</span>
+            <span className="text-xs">{mood.icon}</span>
+            <p className="text-xs font-semibold text-white uppercase">{mood.label.toUpperCase()}</p>
           </div>
           
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-wider text-white/70">
-              {isLoading ? 'Buffering' : isPlaying ? 'Live' : 'Paused'}
+              {isLoading ? 'Buffering' : isPlaying ? 'Live' : 'PAUSED'}
             </span>
-            
           </div>
+        </div>
+        
+        <div>
+          <h2 className="text-3xl font-bold text-white mb-2">{currentTrack.title}</h2>
+          <p className="text-white/70">{currentTrack.artist} • {currentTrack.session || 'Session'}</p>
         </div>
 
         {/* Artwork & Controls */}
@@ -96,18 +101,23 @@ export function NowPlaying({
               }}
             />
             {message && (
-              <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80">
+              <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80">
                 {message}
               </div>
             )}
           </motion.div>
 
           <div className="flex flex-col justify-between gap-6">
+            {/* Description */}
+            <p className="text-white/70 text-sm leading-relaxed">
+              {currentTrack.story || `${currentTrack.title} from ${currentTrack.session || 'the session'} — ${currentTrack.mood === 'epic' ? 'engineered for heroic raids and cinematic finales' : 'perfect for your stream'}.`}
+            </p>
+            
             {/* Progress */}
             <div className="space-y-2">
-              <div className="h-2 w-full rounded-full bg-white/10">
+              <div className="h-1 w-full rounded-full bg-white/10">
                 <div
-                  className="h-full rounded-full bg-accent transition-all"
+                  className="h-full rounded-full bg-white/30 transition-all"
                   style={{ width: `${Math.min(progress * 100, 100)}%` }}
                 />
               </div>
@@ -123,13 +133,13 @@ export function NowPlaying({
                 type="button"
                 onClick={onTogglePlay}
                 disabled={isLoading}
-                className="flex flex-1 items-center justify-center rounded-xl border border-white/10 bg-white px-4 py-3 text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="flex flex-1 items-center justify-center rounded-xl bg-white px-6 py-3 text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
-                  <PauseCircle className="h-8 w-8" />
+                  <PauseCircle className="h-6 w-6" />
                 ) : (
-                  <PlayCircle className="h-8 w-8" />
+                  <PlayCircle className="h-6 w-6" />
                 )}
               </button>
 

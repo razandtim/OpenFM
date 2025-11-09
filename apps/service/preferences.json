@@ -6,7 +6,7 @@
     "duckLevel": -20,
     "duckAttack": 10,
     "duckRelease": 250,
-    "autoRescan": true,
+    "autoRescan": false,
     "showOverlay": false,
     "playbackMode": "shuffle",
     "loop": true

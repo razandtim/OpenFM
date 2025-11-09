@@ -15,6 +15,10 @@ export interface SettingsProps {
   audioPriorityOverrides?: string[];
   onAudioPriorityChange?: (sources: string[]) => void;
   availableOBSSources?: string[];
+  volume?: number;
+  onVolumeChange?: (volume: number) => void;
+  crossfadeDuration?: number;
+  onCrossfadeChange?: (duration: number) => void;
   className?: string;
 }
 
@@ -30,6 +34,10 @@ export function Settings({
   audioPriorityOverrides = [],
   onAudioPriorityChange,
   availableOBSSources = [],
+  volume,
+  onVolumeChange,
+  crossfadeDuration,
+  onCrossfadeChange,
   className,
 }: SettingsProps) {
   const [tab, setTab] = useState<'general' | 'audio' | 'library' | 'suno'>('general');
@@ -146,7 +154,7 @@ export function Settings({
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Crossfade Duration</label>
                 <span className="text-sm text-white/60">
-                  {settings.crossfadeDuration}ms
+                  {crossfadeDuration !== undefined ? crossfadeDuration : settings.crossfadeDuration}ms
                 </span>
               </div>
               <input
@@ -154,17 +162,48 @@ export function Settings({
                 min="0"
                 max="1000"
                 step="50"
-                value={settings.crossfadeDuration}
-                onChange={(e) =>
-                  onSettingsChange({ crossfadeDuration: Number(e.target.value) })
-                }
+                value={crossfadeDuration !== undefined ? crossfadeDuration : settings.crossfadeDuration}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  if (onCrossfadeChange) {
+                    onCrossfadeChange(value);
+                  } else {
+                    onSettingsChange({ crossfadeDuration: value });
+                  }
+                }}
                 className="w-full accent-accent"
               />
+              <p className="text-xs text-white/60">
+                Default 250 ms. Slide it where you like. Switching moods or songs always feels polished.
+              </p>
             </div>
+
+            {onVolumeChange && volume !== undefined && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Volume</label>
+                  <span className="text-sm text-white/60">
+                    {Math.round(volume * 100)}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={volume}
+                  onChange={(e) => onVolumeChange(Number(e.target.value))}
+                  className="w-full accent-accent"
+                />
+                <p className="text-xs text-white/60">
+                  Master volume control for OpenFM playback
+                </p>
+              </div>
+            )}
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Target Volume</label>
+                <label className="text-sm font-medium">Target Volume (dB)</label>
                 <span className="text-sm text-white/60">
                   {settings.targetVolume} dB
                 </span>
