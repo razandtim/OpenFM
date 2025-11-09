@@ -1,0 +1,20 @@
+{
+  "name": "@openfm/desktop",
+  "version": "0.1.0",
+  "description": "OpenFM Desktop App - Standalone music player",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0",
+    "typescript": "^5.9.3"
+  }
+}
+
