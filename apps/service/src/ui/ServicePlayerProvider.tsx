@@ -15,6 +15,7 @@ export function ServicePlayerProvider({ children }: ServicePlayerProviderProps) 
   const [settings, setSettings] = useState<PlayerSettings | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastStateUpdateRef = useRef<string>('');
 
   // Connect to WebSocket
   useEffect(() => {
@@ -31,21 +32,22 @@ export function ServicePlayerProvider({ children }: ServicePlayerProviderProps) 
           try {
             const data = JSON.parse(event.data);
             if (data.type === 'state' && data.state) {
-              // Log state updates for debugging
-              console.log('WebSocket state update:', {
-                currentMood: data.state.currentMood,
-                currentTrack: data.state.currentTrack?.title,
-                isLoading: data.state.isLoading,
-                isPlaying: data.state.isPlaying,
-                hasTrack: !!data.state.currentTrack,
-              });
+              // Throttle state update logs to avoid console spam
+              const stateKey = `${data.state.currentMood}-${data.state.currentTrack?.id}-${data.state.isPlaying}-${data.state.isLoading}`;
+              if (stateKey !== lastStateUpdateRef.current) {
+                console.log('WebSocket state update:', {
+                  currentMood: data.state.currentMood,
+                  currentTrack: data.state.currentTrack?.title,
+                  isLoading: data.state.isLoading,
+                  isPlaying: data.state.isPlaying,
+                  hasTrack: !!data.state.currentTrack,
+                });
+                lastStateUpdateRef.current = stateKey;
+              }
               
               // Always update state from WebSocket - it's the source of truth
               const newState = { ...data.state };
               setState(newState);
-              
-              // Also update the PlayerProvider if it exists
-              // The PlayerProvider should sync with this state
             } else if (data.type === 'settings' && data.settings) {
               setSettings(data.settings);
             } else if (data.type === 'library' && data.library) {
@@ -215,6 +217,29 @@ function APIConnectedWrapper({
   const player = usePlayer();
   
   // Track progress locally from audio element for smooth UI updates
+  // Store the last known state from WebSocket to avoid conflicts
+  const lastWebSocketStateRef = React.useRef<PlaybackState | null>(null);
+  
+  // Sync WebSocket state to player context
+  React.useEffect(() => {
+    if (player.onStateChange && player.state && state) {
+      // Only update if there are meaningful differences (not just progress)
+      const hasNonProgressChanges = 
+        state.currentMood !== player.state.currentMood ||
+        state.currentTrack?.id !== player.state.currentTrack?.id ||
+        state.isPlaying !== player.state.isPlaying ||
+        state.isLoading !== player.state.isLoading ||
+        state.isMuted !== player.state.isMuted ||
+        Math.abs(state.volume - player.state.volume) > 0.01;
+      
+      if (hasNonProgressChanges) {
+        console.log('Syncing WebSocket state to player context');
+        lastWebSocketStateRef.current = state;
+        player.onStateChange(state);
+      }
+    }
+  }, [state, player.onStateChange]);
+  
   React.useEffect(() => {
     // Find the audio element and track its progress
     const audioElements = document.getElementsByTagName('audio');
@@ -242,9 +267,12 @@ function APIConnectedWrapper({
             Math.abs(elapsed - player.state.elapsed) > 0.05 ||
             Math.abs(duration - player.state.duration) > 0.05
           ) {
+            // Use the last WebSocket state as base to avoid overwriting backend changes
+            const baseState = lastWebSocketStateRef.current || player.state;
             // Update local state directly without calling API
+            // Only update progress fields, preserve all other fields from WebSocket state
             player.onStateChange?.({ 
-              ...player.state, 
+              ...baseState, 
               elapsed, 
               duration, 
               progress 

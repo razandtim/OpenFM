@@ -11,7 +11,7 @@ const API_BASE = 'http://127.0.0.1:6767/api';
 function PlayerPage() {
   const [sunoApiKey, setSunoApiKey] = useState<string>('');
   const [libraryRoot, setLibraryRoot] = useState<string>('');
-  const [enabledMoods, setEnabledMoods] = useState<Set<string>>(new Set());
+  const [enabledMoods, setEnabledMoods] = useState<Set<string> | undefined>(undefined);
 
   // Fetch initial Suno API key
   React.useEffect(() => {
@@ -43,21 +43,46 @@ function PlayerPage() {
 
   // Fetch library and extract enabled moods
   React.useEffect(() => {
-    fetch(`${API_BASE}/library`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((library) => {
-        if (Array.isArray(library)) {
-          const enabled = new Set<string>(
-            library
-              .filter((mood: any) => mood.enabled && mood.tracks?.length > 0)
-              .map((mood: any) => mood.id)
-          );
-          setEnabledMoods(enabled);
+    const fetchLibrary = () => {
+      fetch(`${API_BASE}/library`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((library) => {
+          if (Array.isArray(library)) {
+            const enabled = new Set<string>(
+              library
+                .filter((mood: any) => mood.enabled && mood.tracks?.length > 0)
+                .map((mood: any) => mood.id)
+            );
+            console.log('Enabled moods updated:', Array.from(enabled));
+            setEnabledMoods(enabled);
+          }
+        })
+        .catch(() => {
+          // Ignore errors if endpoint doesn't exist yet
+        });
+    };
+
+    // Initial fetch
+    fetchLibrary();
+
+    // Set up WebSocket to listen for library updates
+    const ws = new WebSocket('ws://127.0.0.1:6767/ws');
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'library') {
+          console.log('Library updated via WebSocket, refreshing enabled moods');
+          // Refetch library when it changes
+          fetchLibrary();
         }
-      })
-      .catch(() => {
-        // Ignore errors if endpoint doesn't exist yet
-      });
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    };
+
+    return () => {
+      ws.close();
+    };
   }, []);
 
   // Handle Suno API key change
