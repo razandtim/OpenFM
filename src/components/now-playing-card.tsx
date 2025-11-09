@@ -53,6 +53,8 @@ export const NowPlayingCard = () => {
       id="now-playing"
       className="relative overflow-visible rounded-3xl border border-white/10 bg-slate-950/80 p-6 text-white shadow-2xl shadow-black/40 backdrop-blur-lg"
     >
+      {/* Anchor for dynamic island morph to the top sticky bar */}
+      {/* dynamic island anchor removed to avoid scale-up on mini bar */}
       <div
         className="absolute inset-x-6 top-4 h-32 rounded-full blur-3xl"
         style={{ background: mood.glow }}

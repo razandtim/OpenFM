@@ -1,31 +1,29 @@
 import { NowPlayingCard } from "@/components/now-playing-card";
 import { Sidebar } from "@/components/sidebar";
-import { SearchBar } from "@/components/search-bar";
-import { MoodChips } from "@/components/mood-chips";
 import { FeaturedGrids } from "@/components/featured-grids";
-import { NowPlayingTopBar } from "@/components/now-playing-topbar";
+import { StickySearchAndMini } from "@/components/sticky-search-and-mini";
+import { MoodSelector } from "@/components/mood-selector";
+import { MoodBackground } from "@/components/mood-background";
+import { LayoutGroup } from "framer-motion";
 
 export default function HomePage() {
   return (
-    <main className="relative min-h-screen">
-      <div className="flex">
+    <main className="relative min-h-screen pb-20">
+      <MoodBackground />
+      <div className="bg-grid absolute inset-0" aria-hidden />
+      <div className="relative z-10 flex">
         <Sidebar />
-        <div className="flex-1">
-          {/* Gradient content area */}
-          <div className="min-h-screen bg-gradient-to-b from-rose-300 via-rose-200 to-white px-6 py-6">
+        <div className="flex-1 px-6 py-6">
+          <LayoutGroup id="now-playing-group">
             <div className="mx-auto max-w-6xl space-y-6">
-              <SearchBar />
-              <NowPlayingTopBar />
-              <MoodChips />
-              <div className="grid gap-6 md:grid-cols-2">
+              <StickySearchAndMini />
+              <section className="space-y-6">
+                <MoodSelector />
                 <NowPlayingCard />
-                <div className="rounded-3xl border border-white/40 bg-white/60 p-6 shadow-lg">
-                  <div className="aspect-square w-full rounded-2xl bg-sky-200" />
-                </div>
-              </div>
+              </section>
               <FeaturedGrids />
             </div>
-          </div>
+          </LayoutGroup>
         </div>
       </div>
     </main>

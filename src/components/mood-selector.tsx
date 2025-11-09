@@ -11,18 +11,15 @@ export const MoodSelector = () => {
   const { currentMood, setMood, isLoading, isPlaying } = usePlayer();
 
   return (
-    <section className="rounded-3xl border border-white/10 bg-white/5 p-4 text-white shadow-inner shadow-black/30 backdrop-blur-xl">
+    <section className="rounded-3xl border border-white/10 bg-slate-950/80 p-6 text-white shadow-2xl shadow-black/40 backdrop-blur-lg">
       <div className="flex items-center justify-between px-2 pb-3 text-xs uppercase tracking-[0.35em] text-white/50">
         <span>Choose a mood</span>
         <span className="text-white/60">
           {isLoading ? "Tuning..." : isPlaying ? "Live" : "Paused"}
         </span>
       </div>
-      <div
-        className="horizontal-scroll overflow-x-auto pb-2"
-        style={{ scrollbarWidth: "none" }}
-      >
-        <div className="flex min-w-max gap-3 pr-2">
+      <div className="pb-2">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {MOOD_ORDER.map((mood) => (
             <MoodButton
               key={mood}
@@ -52,7 +49,7 @@ const MoodButton = ({
       type="button"
       onClick={onSelect}
       className={clsx(
-        "relative flex w-60 flex-shrink-0 flex-col overflow-hidden rounded-2xl border border-white/10 p-4 text-left transition hover:border-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60",
+        "relative flex w-full flex-col overflow-hidden rounded-2xl border border-white/10 p-4 text-left transition hover:border-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60",
         isActive ? "bg-white/10 shadow-lg shadow-black/30" : "bg-slate-900/40",
       )}
       aria-pressed={isActive}
