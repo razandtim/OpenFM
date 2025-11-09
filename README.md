@@ -1,10 +1,17 @@
 # OpenFM
 
-**OpenFM • mood-based music for your stream and desktop, in one click.**
+<div align="center">
+  <h3>OpenFM • mood-based music for your stream and desktop, in one click</h3>
+  <p>A unified music experience for OBS and desktop with curated mood packs, smooth crossfades, and intelligent audio ducking.</p>
+  
+  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+  [![Version](https://img.shields.io/badge/version-0.1.0-green.svg)](CHANGELOG.md)
+  [![Build Status](https://github.com/openfm/openfm/workflows/Build/badge.svg)](https://github.com/openfm/openfm/actions)
+</div>
 
-A unified music experience for OBS and desktop: play curated Local Mood Packs or Suno API tracks, switch with big artwork cards, enjoy silky crossfades, keep voice/alerts on top, and (optionally) show a clean "now playing" overlay.
+---
 
-## Features
+## ✨ Features
 
 - 🎭 **5 Moods**: Epic, Romantic, Funny, Scary, Sad
 - 🎵 **Dual Sources**: Local music library or Suno AI tracks
